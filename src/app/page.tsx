@@ -1,10 +1,19 @@
-// import Image from "next/image";
-import { redirect } from "next/navigation";
-import Navbar from "../components/ui/Navbar";
+"use client";
+
+import { useState } from "react";
+import LoginPage from "../components/ui/login";
+import ForgotPasswordPage from "@/components/ui/forgotpassword";
 
 export default function Home() {
-  redirect("/home");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  // This won't be reached due to the redirect
-  return <Navbar />;
+  const toggleForgotPassword = () => {
+    setShowForgotPassword(!showForgotPassword);
+  };
+
+  return showForgotPassword ? (
+    <ForgotPasswordPage onBackToLogin={toggleForgotPassword} />
+  ) : (
+    <LoginPage onForgotPasswordClick={toggleForgotPassword} />
+  );
 }
