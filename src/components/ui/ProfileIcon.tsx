@@ -19,7 +19,7 @@ export default function ProfileIcon() {
     <HoverCard>
       <HoverCardTrigger asChild>
         <div className="cursor-pointer">
-          <Avatar>
+          <Avatar className="h-10 w-10">
             <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
