@@ -17,14 +17,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const HomePage = () => {
-  return (
-    <div className="p-5 flex ">
-      <CustomerListComponent />
-    </div>
-  );
-};
-
 interface CustomerData {
   firstName: string;
   lastName: string;
@@ -77,7 +69,7 @@ const customerDataList: CustomerData[] = [
   },
 ];
 
-export function CustomerListComponent() {
+export default function CustomerListComponent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -308,5 +300,3 @@ export function CustomerListComponent() {
     </>
   );
 }
-
-export default HomePage;
