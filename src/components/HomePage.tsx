@@ -3,7 +3,12 @@ import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { RxExternalLink } from "react-icons/rx";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { RxExternalLink, RxPlus } from "react-icons/rx";
 import {
   Dialog,
   DialogContent,
@@ -125,8 +130,8 @@ export function CustomerListComponent() {
 
   return (
     <>
-      <div className="w-48 border border-gray-300 rounded-md p-3">
-        <div className="mb-4">
+      <div className="w-80 border border-gray-300 rounded-md p-5">
+        <div className="mb-4 flex  items-center justify-between gap-4">
           <input
             type="text"
             placeholder="Search customers..."
@@ -134,6 +139,16 @@ export function CustomerListComponent() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+                <RxPlus className="w-5 h-5 text-gray-600 hover:text-gray-800" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto p-2 text-sm">
+              Add New Customer
+            </HoverCardContent>
+          </HoverCard>
         </div>
         <ScrollArea className="h-72 rounded-md border">
           <div className="p-4">
