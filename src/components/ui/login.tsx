@@ -27,7 +27,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
     e.preventDefault();
     redirect("/home");
     // Handle login logic here
-    console.log("Login attempt with:", { email, password });
+    //console.log("Login attempt with:", { email, password });
   };
 
   return (
