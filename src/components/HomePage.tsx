@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { RxExternalLink } from "react-icons/rx";
 import {
   Dialog,
@@ -77,6 +78,10 @@ export function CustomerListComponent() {
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
+  const [editableCustomer, setEditableCustomer] = useState<CustomerData | null>(
+    null
+  );
 
   const filteredCustomers = customerDataList.filter((customer) =>
     `${customer.firstName} ${customer.lastName}`
@@ -86,7 +91,36 @@ export function CustomerListComponent() {
 
   const handleCustomerClick = (customer: CustomerData) => {
     setSelectedCustomer(customer);
+    setEditableCustomer(customer);
     setIsModalOpen(true);
+    setIsEditable(false);
+  };
+
+  const handleEditClick = () => {
+    setIsEditable(true);
+  };
+
+  const handleSaveClick = () => {
+    if (editableCustomer) {
+      setSelectedCustomer(editableCustomer);
+      setIsEditable(false);
+      // Here you would typically save to your backend
+      console.log("Saving customer data:", editableCustomer);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditableCustomer(selectedCustomer);
+    setIsEditable(false);
+  };
+
+  const updateEditableCustomer = (field: keyof CustomerData, value: string) => {
+    if (editableCustomer) {
+      setEditableCustomer({
+        ...editableCustomer,
+        [field]: value,
+      });
+    }
   };
 
   return (
@@ -132,7 +166,7 @@ export function CustomerListComponent() {
             <DialogTitle>Customer Details</DialogTitle>
             <DialogDescription>View customer information</DialogDescription>
           </DialogHeader>
-          {selectedCustomer && (
+          {selectedCustomer && editableCustomer && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <label
@@ -143,9 +177,16 @@ export function CustomerListComponent() {
                 </label>
                 <input
                   id="firstName"
-                  value={selectedCustomer.firstName}
-                  readOnly
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                  value={editableCustomer.firstName}
+                  readOnly={!isEditable}
+                  onChange={(e) =>
+                    updateEditableCustomer("firstName", e.target.value)
+                  }
+                  className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                    isEditable
+                      ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      : "bg-gray-50"
+                  }`}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -157,9 +198,16 @@ export function CustomerListComponent() {
                 </label>
                 <input
                   id="lastName"
-                  value={selectedCustomer.lastName}
-                  readOnly
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                  value={editableCustomer.lastName}
+                  readOnly={!isEditable}
+                  onChange={(e) =>
+                    updateEditableCustomer("lastName", e.target.value)
+                  }
+                  className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                    isEditable
+                      ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      : "bg-gray-50"
+                  }`}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -172,9 +220,16 @@ export function CustomerListComponent() {
                 <input
                   id="emailId"
                   type="email"
-                  value={selectedCustomer.emailId}
-                  readOnly
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm"
+                  value={editableCustomer.emailId}
+                  readOnly={!isEditable}
+                  onChange={(e) =>
+                    updateEditableCustomer("emailId", e.target.value)
+                  }
+                  className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                    isEditable
+                      ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      : "bg-gray-50"
+                  }`}
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -186,11 +241,37 @@ export function CustomerListComponent() {
                 </label>
                 <textarea
                   id="address"
-                  value={selectedCustomer.address}
-                  readOnly
+                  value={editableCustomer.address}
+                  readOnly={!isEditable}
+                  onChange={(e) =>
+                    updateEditableCustomer("address", e.target.value)
+                  }
                   rows={3}
-                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-sm resize-none"
+                  className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm resize-none ${
+                    isEditable
+                      ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      : "bg-gray-50"
+                  }`}
                 />
+              </div>
+              <div className="flex items-center justify-between">
+                {isEditable ? (
+                  <>
+                    <Button variant="outline" onClick={handleCancelEdit}>
+                      Cancel
+                    </Button>
+                    <Button variant="default" onClick={handleSaveClick}>
+                      Save
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={handleEditClick}>
+                      Edit
+                    </Button>
+                    <Button variant="destructive">Delete</Button>
+                  </>
+                )}
               </div>
             </div>
           )}
