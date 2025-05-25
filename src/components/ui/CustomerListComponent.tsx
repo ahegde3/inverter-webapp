@@ -132,7 +132,7 @@ export default function CustomerListComponent() {
 
   return (
     <>
-      <div className="w-80 border border-gray-300 rounded-md p-5">
+      <div className="w-80 border border-gray-300 rounded-md p-5 h-fit">
         <div className="mb-4 flex  items-center justify-between gap-4">
           <input
             type="text"
