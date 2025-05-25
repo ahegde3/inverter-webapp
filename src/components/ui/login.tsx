@@ -25,9 +25,9 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    redirect("/home");
+    redirect("/dashboard");
     // Handle login logic here
-    console.log("Login attempt with:", { email, password });
+    //console.log("Login attempt with:", { email, password });
   };
 
   return (
