@@ -17,7 +17,9 @@ interface ForgotPasswordPageProps {
   onBackToLogin: () => void;
 }
 
-export default function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
+export default function ForgotPasswordPage({
+  onBackToLogin,
+}: ForgotPasswordPageProps) {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,7 +49,7 @@ export default function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPage
       console.log("Password reset attempt with:", { email, newPassword });
       // After successful password reset, redirect to login
       onBackToLogin();
-    } catch (err) {
+    } catch {
       setError("Failed to reset password. Please try again.");
     }
   };
@@ -105,11 +107,7 @@ export default function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPage
                 required
               />
             </div>
-            {error && (
-              <div className="text-sm text-destructive">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-sm text-destructive">{error}</div>}
           </CardContent>
           <CardFooter className="pt-6">
             <Button type="submit" className="w-full">
