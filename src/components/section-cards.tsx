@@ -1,9 +1,7 @@
-import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react"
+import { IconTrendingDown, IconTrendingUp } from "@tabler/icons-react";
 import { MdOutlineElectricBolt } from "react-icons/md";
-
 import { IoHome } from "react-icons/io5";
 import { FiSun } from "react-icons/fi";
-import { Badge } from "@/components/ui/badge"
 import { MdElectricalServices } from "react-icons/md";
 import { TbReportMoney } from "react-icons/tb";
 import {
@@ -13,7 +11,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 
 export function SectionCards() {
   return (
@@ -22,10 +20,10 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Current Generation</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-           4.2 kW
+            4.2 kW
           </CardTitle>
           <CardAction>
-          <MdOutlineElectricBolt />
+            <MdOutlineElectricBolt />
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -41,10 +39,10 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Photovoltaic Output</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-           38.7 kWh
+            38.7 kWh
           </CardTitle>
           <CardAction>
-          <FiSun />
+            <FiSun />
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -80,12 +78,12 @@ export function SectionCards() {
             24.8 kWh
           </CardTitle>
           <CardAction>
-          <IoHome />    
+            <IoHome />
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-           performance increase by 4.5% <IconTrendingUp className="size-4" />
+            performance increase by 4.5% <IconTrendingUp className="size-4" />
           </div>
           {/* <div className="text-muted-foreground">Meets growth projections</div> */}
         </CardFooter>
@@ -94,10 +92,10 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Solar Revenue</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-           $ 3.67
+            $ 3.67
           </CardTitle>
           <CardAction>
-          <TbReportMoney />
+            <TbReportMoney />
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -110,5 +108,5 @@ export function SectionCards() {
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
