@@ -94,11 +94,21 @@ export function CustomerListComponent() {
       .includes(searchQuery.toLowerCase())
   );
 
-  const handleCustomerClick = (customer: CustomerData) => {
+  const handleCustomerClick = (customer: CustomerData | void) => {
+    let canEdit: boolean = false;
+    if (!customer) {
+      customer = {
+        firstName: "",
+        lastName: "",
+        emailId: "",
+        address: "",
+      };
+      canEdit = true;
+    }
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
     setIsModalOpen(true);
-    setIsEditable(false);
+    setIsEditable(canEdit);
   };
 
   const handleEditClick = () => {
@@ -141,7 +151,10 @@ export function CustomerListComponent() {
           />
           <HoverCard>
             <HoverCardTrigger asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md transition-colors">
+              <button
+                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                onClick={() => handleCustomerClick()}
+              >
                 <RxPlus className="w-5 h-5 text-gray-600 hover:text-gray-800" />
               </button>
             </HoverCardTrigger>
