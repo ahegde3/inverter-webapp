@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
-import type { CustomerData, CustomerApiResponse } from "@/types/customer";
+import type {
+  CustomerData,
+  CustomerApiResponse,
+  CustomerErrorResponse,
+} from "@/types/customer";
 
 interface UseCustomersOptions {
   search?: string;
@@ -51,7 +55,7 @@ export function useCustomers(
       if (!response.ok) {
         throw new Error(
           "success" in data && !data.success
-            ? data.error
+            ? (data as CustomerErrorResponse).error
             : "Failed to fetch customers"
         );
       }
