@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type {
   CustomerData,
   CustomerApiResponse,
@@ -37,7 +37,7 @@ export function useCustomers(
   const [pagination, setPagination] =
     useState<UseCustomersReturn["pagination"]>(null);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -74,10 +74,6 @@ export function useCustomers(
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
   }, [
     options.search,
     options.page,
@@ -85,6 +81,10 @@ export function useCustomers(
     options.sortBy,
     options.sortOrder,
   ]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   return {
     customers,
