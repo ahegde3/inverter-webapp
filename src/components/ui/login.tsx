@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,16 +18,117 @@ interface LoginPageProps {
   onForgotPasswordClick: () => void;
 }
 
-export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
-  // const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+// Login API response interface
+interface LoginResponse {
+  success: boolean;
+  data?: {
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      role: string;
+    };
+    token: string;
+  };
+  message: string;
+  error?: string;
+}
 
-  const handleSubmit = (e: React.FormEvent) => {
+// Encryption key - in a real app, this should be more secure and from environment variables
+const ENCRYPTION_KEY = "AceInverterSecureKey2024";
+
+// Simple XOR encryption function
+const encryptPassword = (password: string): string => {
+  try {
+    let encrypted = "";
+    for (let i = 0; i < password.length; i++) {
+      const passwordChar = password.charCodeAt(i);
+      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      encrypted += String.fromCharCode(passwordChar ^ keyChar);
+    }
+    // Base64 encode the encrypted string
+    return btoa(encrypted);
+  } catch (error) {
+    console.error("Error encrypting password:", error);
+    throw new Error("Password encryption failed");
+  }
+};
+
+export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const callLoginAPI = async (username: string, password: string) => {
+    try {
+      // Encrypt the password before sending
+      const encryptedPassword = encryptPassword(password);
+      
+      console.log("Sending encrypted password to backend");
+      
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          password: encryptedPassword // Send encrypted password
+        })
+      });
+
+      const data: LoginResponse = await response.json();
+
+      if (data.success && data.data) {
+        console.log("Login successful:", data);
+        
+        // Store user data and token in localStorage
+        localStorage.setItem('userToken', data.data.token);
+        localStorage.setItem('userData', JSON.stringify(data.data.user));
+        localStorage.setItem('customerId', data.data.user.id);
+        
+        return data;
+      } else {
+        throw new Error(data.error || "Login failed");
+      }
+    } catch (error) {
+      console.error("Error calling login API:", error);
+      throw error;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    redirect("/home");
-    // Handle login logic here
-    //console.log("Login attempt with:", { email, password });
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Validate input fields
+      if (!username || !password) {
+        throw new Error("Please fill in all fields");
+      }
+
+      console.log("Login attempt with username:", username);
+      console.log("Password will be encrypted before sending");
+      
+      // Call the login API with encrypted password
+      const loginResponse = await callLoginAPI(username, password);
+      
+      console.log("Login API response:", loginResponse);
+      
+      // Redirect to home page after successful login
+      router.push("/home");
+      
+    } catch (error) {
+      console.error("Login error:", error);
+      setError(error instanceof Error ? error.message : "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,15 +142,21 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -61,20 +168,31 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
               <Button
                 type="button"
                 variant="link"
                 className="text-sm text-gray-600 p-0 h-auto"
                 onClick={onForgotPasswordClick}
+                disabled={isLoading}
               >
                 Forgot your password?
               </Button>
             </div>
+            
+            {/* Demo credentials info */}
+            <div className="p-3 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="font-medium mb-1">Demo Credentials:</div>
+              <div>Admin: admin / admin123</div>
+              <div>User: john.doe / password123</div>
+              <div>User: jane.smith / password123</div>
+              <div className="mt-1 text-green-600">🔒 Passwords are encrypted before sending</div>
+            </div>
           </CardContent>
           <CardFooter className="pt-6">
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
           </CardFooter>
         </form>
