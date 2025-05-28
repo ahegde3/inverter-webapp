@@ -10,7 +10,8 @@ applications:
             - npm rebuild --force
         build:
           commands:
-            - npm run build
+            - npm run build:amplify
+            - ls -la out/ || echo "out directory not found"
       artifacts:
         baseDirectory: out
         files:
@@ -19,3 +20,12 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+      buildSettings:
+        runtime: "nodejs18.x"
+    customHeaders:
+      - pattern: "**/*"
+        headers:
+          - key: "X-Frame-Options"
+            value: "DENY"
+          - key: "X-Content-Type-Options"
+            value: "nosniff"
