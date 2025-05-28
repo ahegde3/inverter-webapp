@@ -9,6 +9,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { RxExternalLink, RxPlus } from "react-icons/rx";
+import { HiMenuAlt3, HiX } from "react-icons/hi";
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ export default function CustomerListComponent() {
   const [editableCustomer, setEditableCustomer] = useState<CustomerData | null>(
     null
   );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const filteredCustomers = customerDataList.filter((customer) =>
     `${customer.firstName} ${customer.lastName}`
@@ -132,8 +134,34 @@ export default function CustomerListComponent() {
 
   return (
     <>
-      <div className="w-80 border border-gray-300 rounded-md p-5 h-fit">
-        <div className="mb-4 flex  items-center justify-between gap-4">
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden p-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="flex items-center gap-2"
+        >
+          {isMobileMenuOpen ? (
+            <HiX className="w-4 h-4" />
+          ) : (
+            <HiMenuAlt3 className="w-4 h-4" />
+          )}
+          {isMobileMenuOpen ? "Close" : "Customer List"}
+        </Button>
+      </div>
+
+      {/* Customer List Panel */}
+      <div className={`
+        ${isMobileMenuOpen ? "block" : "hidden"} lg:block
+        w-full lg:w-80 
+        border border-gray-300 rounded-md 
+        p-4 lg:p-5 
+        h-fit
+        mx-4 lg:mx-0
+        mb-4 lg:mb-0
+      `}>
+        <div className="mb-4 flex items-center justify-between gap-4">
           <input
             type="text"
             placeholder="Search customers..."
@@ -155,7 +183,7 @@ export default function CustomerListComponent() {
             </HoverCardContent>
           </HoverCard>
         </div>
-        <ScrollArea className="h-72 rounded-md border">
+        <ScrollArea className="h-64 lg:h-72 rounded-md border">
           <div className="p-4">
             <h4 className="mb-4 text-sm font-medium leading-none">
               Customer List
