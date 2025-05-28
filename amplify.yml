@@ -6,7 +6,8 @@ applications:
         preBuild:
           commands:
             - npm ci --force
-            - npm rebuild lightningcss
+            - npm install --platform=linux --arch=x64 lightningcss --force
+            - npm rebuild --force
         build:
           commands:
             - npm run build
