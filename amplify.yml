@@ -5,7 +5,8 @@ applications:
       phases:
         preBuild:
           commands:
-            - npm ci
+            - npm ci --force
+            - npm rebuild lightningcss
         build:
           commands:
             - npm run build
