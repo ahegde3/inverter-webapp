@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { CustomerData } from "@/types/customer";
 
-// Configure route for static export
-export const dynamic = "force-static";
-
 // Mock customer data - in a real app, this would come from a database
 const customerDataList: CustomerData[] = [
   {
