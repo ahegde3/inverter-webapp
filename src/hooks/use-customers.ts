@@ -31,6 +31,9 @@ interface UseCustomersReturn {
 export function useCustomers(
   options: UseCustomersOptions = {}
 ): UseCustomersReturn {
+  // Destructure options to avoid dependency issues
+  const { search, page, limit, sortBy, sortOrder } = options;
+
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,11 +46,11 @@ export function useCustomers(
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.search) params.append("search", options.search);
-      if (options.page) params.append("page", options.page.toString());
-      if (options.limit) params.append("limit", options.limit.toString());
-      if (options.sortBy) params.append("sortBy", options.sortBy);
-      if (options.sortOrder) params.append("sortOrder", options.sortOrder);
+      if (search) params.append("search", search);
+      if (page) params.append("page", page.toString());
+      if (limit) params.append("limit", limit.toString());
+      if (sortBy) params.append("sortBy", sortBy);
+      if (sortOrder) params.append("sortOrder", sortOrder);
 
       const response = await fetch(`/api/customers?${params.toString()}`);
       const data: CustomerApiResponse = await response.json();
@@ -74,13 +77,7 @@ export function useCustomers(
     } finally {
       setLoading(false);
     }
-  }, [
-    options.search,
-    options.page,
-    options.limit,
-    options.sortBy,
-    options.sortOrder,
-  ]);
+  }, [search, page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchCustomers();

@@ -1,37 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Configure route for static export
-export const dynamic = "force-static";
+// Configure route for dynamic handling since we're processing query parameters
+export const dynamic = "force-dynamic";
 
 // Mock dashboard data - using first 3 entries from data.json for testing
 const dashboardData = [
   {
-    "id": 1,
-    "header": "Cover page",
-    "type": "Cover page",
-    "status": "In Process",
-    "target": "18",
-    "limit": "5",
-    "reviewer": "Eddie Lake"
+    id: 1,
+    header: "Cover page",
+    type: "Cover page",
+    status: "In Process",
+    target: "18",
+    limit: "5",
+    reviewer: "Eddie Lake",
   },
   {
-    "id": 2,
-    "header": "Table of contents",
-    "type": "Table of contents",
-    "status": "Done",
-    "target": "29",
-    "limit": "24",
-    "reviewer": "Eddie Lake"
+    id: 2,
+    header: "Table of contents",
+    type: "Table of contents",
+    status: "Done",
+    target: "29",
+    limit: "24",
+    reviewer: "Eddie Lake",
   },
   {
-    "id": 3,
-    "header": "Executive summary",
-    "type": "Narrative",
-    "status": "Done",
-    "target": "10",
-    "limit": "13",
-    "reviewer": "Eddie Lake"
-  }
+    id: 3,
+    header: "Executive summary",
+    type: "Narrative",
+    status: "Done",
+    target: "10",
+    limit: "13",
+    reviewer: "Eddie Lake",
+  },
 ];
 
 export async function GET(request: NextRequest) {
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       metadata: {
         totalItems: dashboardData.length,
         lastUpdated: new Date().toISOString(),
-      }
+      },
     };
 
     // Return successful response
@@ -79,15 +79,15 @@ export async function GET(request: NextRequest) {
       data: customerDashboardData,
       message: `Dashboard data retrieved for customer ${customerId}`,
     });
-
   } catch (error) {
     console.error("Error fetching customer dashboard:", error);
     return NextResponse.json(
       {
         success: false,
-        error: "Internal server error occurred while fetching customer dashboard.",
+        error:
+          "Internal server error occurred while fetching customer dashboard.",
       },
       { status: 500 }
     );
   }
-} 
+}

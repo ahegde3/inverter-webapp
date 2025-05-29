@@ -49,42 +49,45 @@ export default function Dashboard() {
 
   const callDashboardAPI = async (customerId: string) => {
     try {
-      setDashboardState(prev => ({ ...prev, loading: true, error: null }));
-      
-      const response = await fetch(`/api/customers/dashboard?customer_id=${customerId}`);
-      
+      setDashboardState((prev) => ({ ...prev, loading: true, error: null }));
+
+      const response = await fetch(
+        `/api/customers/dashboard?customer_id=${customerId}`
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data: DashboardResponse = await response.json();
-      
+
       if (data.success) {
         console.log("Dashboard data retrieved successfully:", data);
         console.log("Dashboard items:", data.data.dashboardItems);
-        
+
         // Store dashboard data in localStorage for persistence
-        localStorage.setItem('dashboardData', JSON.stringify(data.data));
-        localStorage.setItem('customerId', customerId);
-        
+        localStorage.setItem("dashboardData", JSON.stringify(data.data));
+        localStorage.setItem("customerId", customerId);
+
         setDashboardState({
           data: data.data.dashboardItems,
           loading: false,
           error: null,
           customerId: customerId,
         });
-        
+
         return data;
       } else {
         throw new Error("Failed to fetch dashboard data");
       }
     } catch (error) {
       console.error("Error calling dashboard API:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to load dashboard";
-      setDashboardState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: errorMessage 
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load dashboard";
+      setDashboardState((prev) => ({
+        ...prev,
+        loading: false,
+        error: errorMessage,
       }));
       throw error;
     }
@@ -95,14 +98,13 @@ export default function Dashboard() {
     const loadDashboardData = async () => {
       try {
         // Check if we have stored customer ID from login
-        const storedCustomerId = localStorage.getItem('customerId');
-        
+        const storedCustomerId = localStorage.getItem("customerId");
+
         // If no stored customer ID, use default for demo
         const customerId = storedCustomerId || "123";
-        
+
         console.log("Loading dashboard for customer:", customerId);
         await callDashboardAPI(customerId);
-        
       } catch (error) {
         console.error("Failed to load dashboard:", error);
       }
@@ -128,10 +130,12 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">⚠️ Error Loading Dashboard</div>
+          <div className="text-red-500 text-xl mb-4">
+            ⚠️ Error Loading Dashboard
+          </div>
           <p className="text-gray-600">{dashboardState.error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Retry
@@ -169,15 +173,14 @@ export default function Dashboard() {
                   </div>
                 </div>
               )} */}
-              
+
               <SectionCards />
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              
+
               {/* Display dashboard data if available */}
-              
-              
+
               {/* <DataTable data={data} /> */}
             </div>
           </div>
