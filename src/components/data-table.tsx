@@ -639,11 +639,11 @@ const chartData = [
 const chartConfig = {
   desktop: {
     label: "Desktop",
-    color: "var(--primary)",
+    color: "#3b82f6", // Blue
   },
   mobile: {
     label: "Mobile",
-    color: "var(--primary)",
+    color: "#06b6d4", // Cyan
   },
 } satisfies ChartConfig
 
@@ -691,18 +691,18 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                   />
                   <Area
                     dataKey="mobile"
-                    type="natural"
-                    fill="var(--color-mobile)"
-                    fillOpacity={0.6}
+                    type="linear"
+                    fill="transparent"
                     stroke="var(--color-mobile)"
+                    strokeWidth={3}
                     stackId="a"
                   />
                   <Area
                     dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
+                    type="linear"
+                    fill="transparent"
                     stroke="var(--color-desktop)"
+                    strokeWidth={3}
                     stackId="a"
                   />
                 </AreaChart>

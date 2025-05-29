@@ -15,20 +15,20 @@ import {
 
 export function SectionCards() {
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 px-2 md:px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-3 @3xl/main:grid-cols-4 @5xl/main:grid-cols-5">
+    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-2 sm:grid-cols-2 gap-2 md:gap-4 px-2 md:px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-3 @3xl/main:grid-cols-4 @5xl/main:grid-cols-5">
       <Card className="@container/card">
-        <CardHeader className="pb-3">
-          <CardDescription className="text-xs md:text-sm">Current Generation</CardDescription>
-          <CardTitle className="text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            4.2 <span className="text-base md:text-lg font-normal">kW</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardDescription className="text-[10px] sm:text-xs md:text-sm">Current Generation</CardDescription>
+          <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            4.2 <span className="text-sm sm:text-base md:text-lg font-normal">kW</span>
           </CardTitle>
           <CardAction>
-            <MdOutlineElectricBolt className="w-4 h-4 md:w-5 md:h-5" />
+            <MdOutlineElectricBolt className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1 md:gap-1.5 text-xs md:text-sm pt-0">
+        <CardFooter className="flex-col items-start gap-0.5 sm:gap-1 md:gap-1.5 text-[10px] sm:text-xs md:text-sm pt-0">
           <div className="line-clamp-1 flex gap-1 md:gap-2 font-medium">
-            Peak today 4.2 kW <IconTrendingUp className="size-3 md:size-4" />
+            Peak today 4.2 kW <IconTrendingUp className="size-2 sm:size-3 md:size-4" />
           </div>
           <div className="text-muted-foreground">
             {/* Visitors for the last 6 months */}
@@ -36,18 +36,18 @@ export function SectionCards() {
         </CardFooter>
       </Card>
       <Card className="@container/card">
-        <CardHeader className="pb-3">
-          <CardDescription className="text-xs md:text-sm">Photovoltaic Output</CardDescription>
-          <CardTitle className="text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            38.7 <span className="text-base md:text-lg font-normal">kWh</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardDescription className="text-[10px] sm:text-xs md:text-sm">Photovoltaic Output</CardDescription>
+          <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            38.7 <span className="text-sm sm:text-base md:text-lg font-normal">kWh</span>
           </CardTitle>
           <CardAction>
-            <FiSun className="w-4 h-4 md:w-5 md:h-5" />
+            <FiSun className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1 md:gap-1.5 text-xs md:text-sm pt-0">
+        <CardFooter className="flex-col items-start gap-0.5 sm:gap-1 md:gap-1.5 text-[10px] sm:text-xs md:text-sm pt-0">
           <div className="line-clamp-1 flex gap-1 md:gap-2 font-medium">
-            Down 2% this period <IconTrendingDown className="size-3 md:size-4" />
+            Down 2% this period <IconTrendingDown className="size-2 sm:size-3 md:size-4" />
           </div>
           <div className="text-muted-foreground">
             {/* Acquisition needs attention */}
@@ -55,52 +55,52 @@ export function SectionCards() {
         </CardFooter>
       </Card>
       <Card className="@container/card">
-        <CardHeader className="pb-3">
-          <CardDescription className="text-xs md:text-sm">Transferred to Grid</CardDescription>
-          <CardTitle className="text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            12.3 <span className="text-base md:text-lg font-normal">kWh</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardDescription className="text-[10px] sm:text-xs md:text-sm">Transferred to Grid</CardDescription>
+          <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            12.3 <span className="text-sm sm:text-base md:text-lg font-normal">kWh</span>
           </CardTitle>
           <CardAction>
-            <MdElectricalServices className="w-4 h-4 md:w-5 md:h-5" />
+            <MdElectricalServices className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1 md:gap-1.5 text-xs md:text-sm pt-0">
+        <CardFooter className="flex-col items-start gap-0.5 sm:gap-1 md:gap-1.5 text-[10px] sm:text-xs md:text-sm pt-0">
           <div className="line-clamp-1 flex gap-1 md:gap-2 font-medium">
-            Going up this period by 2% <IconTrendingUp className="size-3 md:size-4" />
+            Going up this period by 2% <IconTrendingUp className="size-2 sm:size-3 md:size-4" />
           </div>
           {/* <div className="text-muted-foreground">Engagement exceed targets</div> */}
         </CardFooter>
       </Card>
       <Card className="@container/card">
-        <CardHeader className="pb-3">
-          <CardDescription className="text-xs md:text-sm">Load Consumption</CardDescription>
-          <CardTitle className="text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            24.8 <span className="text-base md:text-lg font-normal">kWh</span>
+        <CardHeader className="pb-2 md:pb-3">
+          <CardDescription className="text-[10px] sm:text-xs md:text-sm">Load Consumption</CardDescription>
+          <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            24.8 <span className="text-sm sm:text-base md:text-lg font-normal">kWh</span>
           </CardTitle>
           <CardAction>
-            <IoHome className="w-4 h-4 md:w-5 md:h-5" />
+            <IoHome className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1 md:gap-1.5 text-xs md:text-sm pt-0">
+        <CardFooter className="flex-col items-start gap-0.5 sm:gap-1 md:gap-1.5 text-[10px] sm:text-xs md:text-sm pt-0">
           <div className="line-clamp-1 flex gap-1 md:gap-2 font-medium">
-            performance increase by 4.5% <IconTrendingUp className="size-3 md:size-4" />
+            performance increase by 4.5% <IconTrendingUp className="size-2 sm:size-3 md:size-4" />
           </div>
           {/* <div className="text-muted-foreground">Meets growth projections</div> */}
         </CardFooter>
       </Card>
-      <Card className="@container/card sm:col-span-2 lg:col-span-1">
-        <CardHeader className="pb-3">
-          <CardDescription className="text-xs md:text-sm">Solar Revenue</CardDescription>
-          <CardTitle className="text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+      <Card className="@container/card col-span-2 sm:col-span-2 lg:col-span-1">
+        <CardHeader className="pb-2 md:pb-3">
+          <CardDescription className="text-[10px] sm:text-xs md:text-sm">Solar Revenue</CardDescription>
+          <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             $ 3.67
           </CardTitle>
           <CardAction>
-            <TbReportMoney className="w-4 h-4 md:w-5 md:h-5" />
+            <TbReportMoney className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1 md:gap-1.5 text-xs md:text-sm pt-0">
+        <CardFooter className="flex-col items-start gap-0.5 sm:gap-1 md:gap-1.5 text-[10px] sm:text-xs md:text-sm pt-0">
           <div className="line-clamp-1 flex gap-1 md:gap-2 font-medium">
-            Revenue up by 1% <IconTrendingUp className="size-3 md:size-4" />
+            Revenue up by 1% <IconTrendingUp className="size-2 sm:size-3 md:size-4" />
           </div>
           <div className="text-muted-foreground">
             {/* Visitors for the last 6 months */}
