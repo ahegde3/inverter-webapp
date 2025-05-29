@@ -37,24 +37,24 @@ interface LoginResponse {
 }
 
 // Encryption key - in a real app, this should be more secure and from environment variables
-const ENCRYPTION_KEY = "AceInverterSecureKey2024";
+// const ENCRYPTION_KEY = "AceInverterSecureKey2024";
 
 // Simple XOR encryption function
-const encryptPassword = (password: string): string => {
-  try {
-    let encrypted = "";
-    for (let i = 0; i < password.length; i++) {
-      const passwordChar = password.charCodeAt(i);
-      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      encrypted += String.fromCharCode(passwordChar ^ keyChar);
-    }
-    // Base64 encode the encrypted string
-    return btoa(encrypted);
-  } catch (error) {
-    console.error("Error encrypting password:", error);
-    throw new Error("Password encryption failed");
-  }
-};
+// const encryptPassword = (password: string): string => {
+//   try {
+//     let encrypted = "";
+//     for (let i = 0; i < password.length; i++) {
+//       const passwordChar = password.charCodeAt(i);
+//       const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+//       encrypted += String.fromCharCode(passwordChar ^ keyChar);
+//     }
+//     // Base64 encode the encrypted string
+//     return btoa(encrypted);
+//   } catch (error) {
+//     console.error("Error encrypting password:", error);
+//     throw new Error("Password encryption failed");
+//   }
+// };
 
 export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
   const router = useRouter();
@@ -65,32 +65,32 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
 
   const callLoginAPI = async (username: string, password: string) => {
     try {
-      // Encrypt the password before sending
-      const encryptedPassword = encryptPassword(password);
-      
+      // // Encrypt the password before sending
+      // const encryptedPassword = encryptPassword(password);
+
       console.log("Sending encrypted password to backend");
-      
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username,
-          password: encryptedPassword // Send encrypted password
-        })
+          password: password, // Send encrypted password
+        }),
       });
 
       const data: LoginResponse = await response.json();
 
       if (data.success && data.data) {
         console.log("Login successful:", data);
-        
+
         // Store user data and token in localStorage
-        localStorage.setItem('userToken', data.data.token);
-        localStorage.setItem('userData', JSON.stringify(data.data.user));
-        localStorage.setItem('customerId', data.data.user.id);
-        
+        localStorage.setItem("userToken", data.data.token);
+        localStorage.setItem("userData", JSON.stringify(data.data.user));
+        localStorage.setItem("customerId", data.data.user.id);
+
         return data;
       } else {
         throw new Error(data.error || "Login failed");
@@ -114,18 +114,21 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
 
       console.log("Login attempt with username:", username);
       console.log("Password will be encrypted before sending");
-      
+
       // Call the login API with encrypted password
       const loginResponse = await callLoginAPI(username, password);
-      
+
       console.log("Login API response:", loginResponse);
-      
+
       // Redirect to home page after successful login
       router.push("/home");
-      
     } catch (error) {
       console.error("Login error:", error);
-      setError(error instanceof Error ? error.message : "Login failed. Please try again.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Login failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -180,14 +183,16 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
                 Forgot your password?
               </Button>
             </div>
-            
+
             {/* Demo credentials info */}
             <div className="p-3 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
               <div className="font-medium mb-1">Demo Credentials:</div>
               <div>Admin: admin / admin123</div>
               <div>User: john.doe / password123</div>
               <div>User: jane.smith / password123</div>
-              <div className="mt-1 text-green-600">🔒 Passwords are encrypted before sending</div>
+              <div className="mt-1 text-green-600">
+                🔒 Passwords are encrypted before sending
+              </div>
             </div>
           </CardContent>
           <CardFooter className="pt-6">

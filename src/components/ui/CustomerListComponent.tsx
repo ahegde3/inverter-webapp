@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -17,85 +16,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-interface CustomerData {
-  firstName: string;
-  lastName: string;
-  emailId: string;
-  address: string;
-}
-
-// Dashboard data interface based on our API response
-interface DashboardItem {
-  id: number;
-  header: string;
-  type: string;
-  status: string;
-  target: string;
-  limit: string;
-  reviewer: string;
-}
-
-interface DashboardResponse {
-  success: boolean;
-  data: {
-    customerId: string;
-    dashboardItems: DashboardItem[];
-    metadata: {
-      totalItems: number;
-      lastUpdated: string;
-    };
-  };
-  message: string;
-}
-
-const customerDataList: CustomerData[] = [
-  {
-    firstName: "John",
-    lastName: "Doe",
-    emailId: "john.doe@example.com",
-    address: "123 Main St, New York, NY 10001",
-  },
-  {
-    firstName: "Jane",
-    lastName: "Smith",
-    emailId: "jane.smith@example.com",
-    address: "456 Oak Ave, Los Angeles, CA 90210",
-  },
-  {
-    firstName: "Mike",
-    lastName: "Johnson",
-    emailId: "mike.johnson@example.com",
-    address: "789 Pine Rd, Chicago, IL 60601",
-  },
-  {
-    firstName: "Sarah",
-    lastName: "Williams",
-    emailId: "sarah.williams@example.com",
-    address: "321 Elm St, Houston, TX 77001",
-  },
-  {
-    firstName: "David",
-    lastName: "Brown",
-    emailId: "david.brown@example.com",
-    address: "654 Maple Dr, Phoenix, AZ 85001",
-  },
-  {
-    firstName: "Emily",
-    lastName: "Davis",
-    emailId: "emily.davis@example.com",
-    address: "987 Cedar Ln, Philadelphia, PA 19101",
-  },
-  {
-    firstName: "Robert",
-    lastName: "Wilson",
-    emailId: "robert.wilson@example.com",
-    address: "147 Birch St, San Antonio, TX 78201",
-  },
-];
+import { useCustomers } from "@/hooks/use-customers";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import type { CustomerData } from "@/types/customer";
 
 export default function CustomerListComponent() {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -105,73 +30,26 @@ export default function CustomerListComponent() {
   const [editableCustomer, setEditableCustomer] = useState<CustomerData | null>(
     null
   );
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
 
-  const filteredCustomers = customerDataList.filter((customer) =>
-    `${customer.firstName} ${customer.lastName}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+  // Debounce search query to avoid too many API calls
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  const callDashboardAPI = async (customerId: string) => {
-    try {
-      setIsLoadingDashboard(true);
-      
-      const response = await fetch(`/api/customers/dashboard?customer_id=${customerId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data: DashboardResponse = await response.json();
-      
-      if (data.success) {
-        console.log("Dashboard data retrieved successfully:", data);
-        console.log("Dashboard items:", data.data.dashboardItems);
-        
-        // Store dashboard data in localStorage for the dashboard page
-        localStorage.setItem('dashboardData', JSON.stringify(data.data));
-        localStorage.setItem('customerId', customerId);
-        
-        // Redirect to dashboard page
-        router.push('/home');
-        
-        return data;
-      } else {
-        throw new Error("Failed to fetch dashboard data");
-      }
-    } catch (error) {
-      console.error("Error calling dashboard API:", error);
-      alert("Failed to load dashboard. Please try again.");
-      throw error;
-    } finally {
-      setIsLoadingDashboard(false);
-    }
-  };
-
-  const handleDashboardClick = async (customer: CustomerData, index: number) => {
-    try {
-      // Generate customer ID based on the customer index + 1 (to match your customer list)
-      const customerId = (index + 1).toString();
-      
-      console.log(`Loading dashboard for customer: ${customer.firstName} ${customer.lastName} (ID: ${customerId})`);
-      
-      // Call the dashboard API and redirect
-      await callDashboardAPI(customerId);
-      
-    } catch (error) {
-      console.error("Failed to load dashboard:", error);
-    }
-  };
+  const { customers, loading, error, refetch } = useCustomers({
+    search: debouncedSearch || undefined,
+    limit: 50, // Fetch more customers for better UX
+  });
 
   const handleCustomerClick = (customer: CustomerData | void) => {
     let canEdit: boolean = false;
     if (!customer) {
       customer = {
+        id: "",
         firstName: "",
         lastName: "",
         emailId: "",
         address: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       canEdit = true;
     }
@@ -191,6 +69,8 @@ export default function CustomerListComponent() {
       setIsEditable(false);
       // Here you would typically save to your backend
       console.log("Saving customer data:", editableCustomer);
+      // Refetch data to get updated list
+      refetch();
     }
   };
 
@@ -238,31 +118,24 @@ export default function CustomerListComponent() {
             <h4 className="mb-4 text-sm font-medium leading-none">
               Customer List
             </h4>
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer: CustomerData, idx) => (
-                <div key={idx}>
+            {loading ? (
+              <div className="text-sm text-gray-500">Loading customers...</div>
+            ) : error ? (
+              <div className="text-sm text-red-500 space-y-2">
+                <p>Error loading customers: {error}</p>
+                <Button variant="outline" size="sm" onClick={refetch}>
+                  Retry
+                </Button>
+              </div>
+            ) : customers.length > 0 ? (
+              customers.map((customer: CustomerData) => (
+                <div key={customer.id}>
                   <div className="flex items-center justify-between">
-                    <div 
-                      className="text-sm cursor-pointer hover:text-blue-600" 
+                    <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
+                    <RxExternalLink
+                      className="w-4 h-4 text-gray-600 hover:text-gray-800 cursor-pointer"
                       onClick={() => handleCustomerClick(customer)}
-                    >
-                      {`${customer.firstName} ${customer.lastName}`}
-                    </div>
-                    <HoverCard>
-                      <HoverCardTrigger asChild>
-                        <RxExternalLink
-                          className={`w-4 h-4 cursor-pointer transition-colors ${
-                            isLoadingDashboard 
-                              ? "text-gray-400 cursor-not-allowed" 
-                              : "text-gray-600 hover:text-blue-600"
-                          }`}
-                          onClick={() => !isLoadingDashboard && handleDashboardClick(customer, idx)}
-                        />
-                      </HoverCardTrigger>
-                      <HoverCardContent className="w-auto p-2 text-sm">
-                        {isLoadingDashboard ? "Loading dashboard..." : "View Dashboard"}
-                      </HoverCardContent>
-                    </HoverCard>
+                    />
                   </div>
                   <Separator className="my-2" />
                 </div>
@@ -272,14 +145,6 @@ export default function CustomerListComponent() {
             )}
           </div>
         </ScrollArea>
-        
-        {/* Loading indicator */}
-        {isLoadingDashboard && (
-          <div className="mt-4 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-blue-600">Loading dashboard...</span>
-          </div>
-        )}
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
