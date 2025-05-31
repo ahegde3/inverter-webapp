@@ -31,6 +31,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # Set production environment
 ENV NODE_ENV=production
 
+# AWS environment variables for build time (if needed during build)
+ARG AWS_REGION
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+
 # Build the application
 RUN npm run build
 
@@ -55,6 +60,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
+
+# Note: AWS environment variables should be provided at runtime
+# via docker run -e or docker-compose environment configuration
 
 EXPOSE 3000
 
