@@ -3,27 +3,27 @@ import { NextRequest, NextResponse } from "next/server";
 // Configure route for static export
 export const dynamic = "force-static";
 
-// Encryption key - should match the frontend key
-const ENCRYPTION_KEY = "AceInverterSecureKey2024";
+// // Encryption key - should match the frontend key
+// const ENCRYPTION_KEY = "AceInverterSecureKey2024";
 
-// Simple XOR decryption function (inverse of the frontend encryption)
-const decryptPassword = (encryptedPassword: string): string => {
-  try {
-    // Base64 decode first
-    const encrypted = atob(encryptedPassword);
+// // Simple XOR decryption function (inverse of the frontend encryption)
+// const decryptPassword = (encryptedPassword: string): string => {
+//   try {
+//     // Base64 decode first
+//     const encrypted = atob(encryptedPassword);
 
-    let decrypted = "";
-    for (let i = 0; i < encrypted.length; i++) {
-      const encryptedChar = encrypted.charCodeAt(i);
-      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      decrypted += String.fromCharCode(encryptedChar ^ keyChar);
-    }
-    return decrypted;
-  } catch (error) {
-    console.error("Error decrypting password:", error);
-    throw new Error("Password decryption failed");
-  }
-};
+//     let decrypted = "";
+//     for (let i = 0; i < encrypted.length; i++) {
+//       const encryptedChar = encrypted.charCodeAt(i);
+//       const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+//       decrypted += String.fromCharCode(encryptedChar ^ keyChar);
+//     }
+//     return decrypted;
+//   } catch (error) {
+//     console.error("Error decrypting password:", error);
+//     throw new Error("Password decryption failed");
+//   }
+// };
 
 // Mock user credentials - in a real app, this would come from a database
 const validUsers = [
@@ -133,7 +133,8 @@ export async function POST(request: NextRequest) {
     const token = `mock_jwt_token_${user.id}_${Date.now()}`;
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: userPassword, ...userWithoutPassword } = user;
+    void userPassword;
 
     console.log(
       `Successful login for user: ${user.username} (${user.firstName} ${user.lastName})`
