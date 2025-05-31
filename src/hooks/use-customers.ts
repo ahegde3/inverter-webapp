@@ -54,6 +54,7 @@ export function useCustomers(
 
       const response = await fetch(`/api/customers?${params.toString()}`);
       const data: CustomerApiResponse = await response.json();
+      console.log(data);
 
       if (!response.ok) {
         throw new Error(
@@ -64,6 +65,7 @@ export function useCustomers(
       }
 
       if ("success" in data && data.success) {
+        console.log(data.data);
         setCustomers(data.data);
         setPagination(data.pagination);
       } else {

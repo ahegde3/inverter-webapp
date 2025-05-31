@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
+import {
+  customerApiResponseSchema,
+  type CustomerApiResponse,
+} from "@/lib/schema";
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   try {
     const data = await ddb.send(
       new ScanCommand({
@@ -14,32 +18,30 @@ export async function GET() {
         },
       })
     );
-    // Return response with data and metadata
-    return NextResponse.json({
-      success: true,
-      data: data,
-      // pagination: {
-      //   page,
-      //   limit,
-      //   totalCustomers,
-      //   totalPages,
-      //   hasNextPage,
-      //   hasPreviousPage,
-      // },
-      // query: {
-      //   search: search || null,
-      //   sortBy,
-      //   sortOrder,
-      // },
-    });
+
+    const response = {
+      success: true as const,
+      data: data.Items || [],
+      error: undefined,
+    } as const;
+
+    // Validate response with Zod schema
+    const validatedResponse = customerApiResponseSchema.parse(response);
+
+    return NextResponse.json(validatedResponse);
   } catch (error) {
     console.error("Error fetching customers:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Internal server error occurred while fetching customers.",
-      },
-      { status: 500 }
-    );
+
+    const errorResponse = {
+      success: false as const,
+      data: undefined,
+      error: "Internal server error occurred while fetching customers.",
+    } as const;
+
+    // Validate error response
+    const validatedErrorResponse =
+      customerApiResponseSchema.parse(errorResponse);
+
+    return NextResponse.json(validatedErrorResponse, { status: 500 });
   }
 }
