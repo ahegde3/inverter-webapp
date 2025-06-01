@@ -17,6 +17,8 @@ export const customerProfileSchema = z.object({
 // Type for customer profile
 export type CustomerProfile = z.infer<typeof customerProfileSchema>;
 
+
+
 // Schema for API response
 export const customerApiResponseSchema = z.discriminatedUnion("success", [
   z.object({

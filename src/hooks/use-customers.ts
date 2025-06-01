@@ -52,7 +52,7 @@ export function useCustomers(
       if (sortBy) params.append("sortBy", sortBy);
       if (sortOrder) params.append("sortOrder", sortOrder);
 
-      const response = await fetch(`/api/customers?${params.toString()}`);
+      const response = await fetch(`/api/customer?${params.toString()}`);
       const data: CustomerApiResponse = await response.json();
       console.log(data);
 
