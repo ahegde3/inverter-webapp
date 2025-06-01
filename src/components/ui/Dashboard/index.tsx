@@ -5,7 +5,6 @@ import { Component as ChartAreaInteractive } from "@/components/chart-area-inter
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import data from "./data.json";
 import { User } from "@/lib/schema";
 

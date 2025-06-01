@@ -65,3 +65,52 @@ export const loginResponseSchema = z.discriminatedUnion("success", [
 ]);
 
 export type LoginResponseSchema = z.infer<typeof loginResponseSchema>;
+
+// Schema for customer update request
+export const customerUpdateSchema = z.object({
+  first_name: z.string().min(1).optional(),
+  last_name: z.string().min(1).optional(),
+  emailId: z.string().email().optional(),
+  address: z.string().min(1).optional(),
+});
+
+export type CustomerUpdate = z.infer<typeof customerUpdateSchema>;
+
+// Schema for customer update response
+export const customerUpdateResponseSchema = z.discriminatedUnion("success", [
+  z.object({
+    success: z.literal(true),
+    data: customerProfileSchema,
+    message: z.string(),
+    error: z.undefined(),
+  }),
+  z.object({
+    success: z.literal(false),
+    data: z.undefined(),
+    message: z.undefined(),
+    error: z.string(),
+  }),
+]);
+
+export type CustomerUpdateResponse = z.infer<
+  typeof customerUpdateResponseSchema
+>;
+
+export const customerDeleteResponseSchema = z.discriminatedUnion("success", [
+  z.object({
+    success: z.literal(true),
+    user_id: z.string(),
+    message: z.string(),
+    error: z.undefined(),
+  }),
+  z.object({
+    success: z.literal(false),
+    user_id: z.undefined(),
+    message: z.undefined(),
+    error: z.string(),
+  }),
+]);
+
+export type CustomerDeleteResponse = z.infer<
+  typeof customerDeleteResponseSchema
+>;

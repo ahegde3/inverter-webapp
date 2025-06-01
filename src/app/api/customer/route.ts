@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   customerApiResponseSchema,
   type CustomerApiResponse,
-  customerProfileSchema,
-  // customerUpdateSchema,
+  // customerProfileSchema,
+  customerUpdateSchema,
   // type CustomerUpdate,
-  // customerUpdateResponseSchema,
+  customerUpdateResponseSchema,
+  customerDeleteResponseSchema,
   type CustomerProfile,
+  type CustomerDeleteResponse,
+  type CustomerUpdateResponse,
 } from "@/lib/schema";
 import { getUsersByRole } from "@/lib/services/user.service";
 import {
@@ -15,7 +18,6 @@ import {
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
-import { z } from "zod";
 
 export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   try {
@@ -48,58 +50,10 @@ export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   }
 }
 
-// Schema for customer update request
-export const customerUpdateSchema = z.object({
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().min(1).optional(),
-  emailId: z.string().email().optional(),
-  address: z.string().min(1).optional(),
-});
-
-export type CustomerUpdate = z.infer<typeof customerUpdateSchema>;
-
-// Schema for customer update response
-export const customerUpdateResponseSchema = z.discriminatedUnion("success", [
-  z.object({
-    success: z.literal(true),
-    data: customerProfileSchema,
-    message: z.string(),
-    error: z.undefined(),
-  }),
-  z.object({
-    success: z.literal(false),
-    data: z.undefined(),
-    message: z.undefined(),
-    error: z.string(),
-  }),
-]);
-
-export type CustomerUpdateResponse = z.infer<
-  typeof customerUpdateResponseSchema
->;
-
-export const customerDeleteResponseSchema = z.discriminatedUnion("success", [
-  z.object({
-    success: z.literal(true),
-    user_id: z.string(),
-    message: z.string(),
-    error: z.undefined(),
-  }),
-  z.object({
-    success: z.literal(false),
-    user_id: z.undefined(),
-    message: z.undefined(),
-    error: z.string(),
-  }),
-]);
-
-type CustomerDeleteResponse = z.infer<typeof customerDeleteResponseSchema>;
-
 export async function PATCH(
   request: NextRequest
 ): Promise<NextResponse<CustomerUpdateResponse>> {
   try {
-
     const body = await request.json();
 
     // Validate the request body

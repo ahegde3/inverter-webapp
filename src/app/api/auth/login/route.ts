@@ -1,35 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { userSchema } from "@/lib/schema";
 import { encryptPassword, findUserByEmail } from "@/lib/services/user.service";
+import { loginRequestSchema, type LoginResponse } from "@/lib/schemas/auth";
+import { userSchema } from "@/lib/schema";
 
 // Configure route for static export
 export const dynamic = "force-static";
-
-// Login request schema
-const loginRequestSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-// Login response schema
-export const loginResponseSchema = z.discriminatedUnion("success", [
-  z.object({
-    success: z.literal(true),
-    data: z.object({
-      user: userSchema.omit({ password: true }),
-      token: z.string(),
-    }),
-    message: z.string(),
-  }),
-  z.object({
-    success: z.literal(false),
-    error: z.string(),
-    message: z.string(),
-  }),
-]);
-
-type LoginResponse = z.infer<typeof loginResponseSchema>;
 
 export async function POST(request: NextRequest) {
   try {
