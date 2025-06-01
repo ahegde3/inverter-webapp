@@ -32,6 +32,49 @@ export const customerProfileSchema = z.object({
 // Type for customer profile
 export type CustomerProfile = z.infer<typeof customerProfileSchema>;
 
+// Device schema for device registration
+export const deviceRegistrationSchema = z.object({
+  serialNo: z.string().min(1),
+  device_type: z.string().min(1),
+  manufacturing_data: z.string().min(1), // Note: keeping original name from spec
+  waranty_end_date: z.string().min(1), // Note: keeping original name from spec
+  customerId: z.string().min(1),
+});
+
+export type DeviceRegistration = z.infer<typeof deviceRegistrationSchema>;
+
+// Device profile schema (stored in database)
+export const deviceProfileSchema = z.object({
+  deviceId: z.string(),
+  serialNo: z.string(),
+  deviceType: z.string(),
+  manufacturingDate: z.string(),
+  warrantyEndDate: z.string(),
+  customerId: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type DeviceProfile = z.infer<typeof deviceProfileSchema>;
+
+// Schema for device registration response
+export const deviceRegistrationResponseSchema = z.discriminatedUnion("success", [
+  z.object({
+    success: z.literal(true),
+    deviceId: z.string(),
+    message: z.string(),
+    error: z.undefined(),
+  }),
+  z.object({
+    success: z.literal(false),
+    deviceId: z.undefined(),
+    message: z.undefined(),
+    error: z.string(),
+  }),
+]);
+
+export type DeviceRegistrationResponse = z.infer<typeof deviceRegistrationResponseSchema>;
+
 // Schema for API response
 export const customerApiResponseSchema = z.discriminatedUnion("success", [
   z.object({
