@@ -68,6 +68,7 @@ export type LoginResponseSchema = z.infer<typeof loginResponseSchema>;
 
 // Schema for customer update request
 export const customerUpdateSchema = z.object({
+  userId: z.string(),
   first_name: z.string().min(1).optional(),
   last_name: z.string().min(1).optional(),
   emailId: z.string().email().optional(),

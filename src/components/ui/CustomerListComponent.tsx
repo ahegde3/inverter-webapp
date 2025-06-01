@@ -32,6 +32,7 @@ export default function CustomerListComponent() {
     null
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCustomerAddition, setIsCustomerAddition] = useState(false);
 
   // Debounce search query to avoid too many API calls
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
@@ -55,6 +56,7 @@ export default function CustomerListComponent() {
       };
       canEdit = true;
     }
+    setIsCustomerAddition(canEdit);
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
     setIsModalOpen(true);
@@ -69,13 +71,17 @@ export default function CustomerListComponent() {
     if (editableCustomer) {
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
-
       // Refetch data to get updated list
       refetch();
     }
   };
 
   const handleCancelEdit = () => {
+    if (isCustomerAddition) {
+      setIsCustomerAddition(false);
+      setIsModalOpen(false);
+      return;
+    }
     setEditableCustomer(selectedCustomer);
     setIsEditable(false);
   };
@@ -115,7 +121,8 @@ export default function CustomerListComponent() {
       </div>
 
       {/* Customer List Panel */}
-      <div className={`
+      <div
+        className={`
         ${isMobileMenuOpen ? "block" : "hidden"} lg:block
         w-full lg:w-80 
         border border-gray-300 rounded-md 
@@ -123,7 +130,8 @@ export default function CustomerListComponent() {
         h-fit
         mx-4 lg:mx-0
         mb-4 lg:mb-0
-      `}>
+      `}
+      >
         <div className="mb-4 flex items-center justify-between gap-4">
           <input
             type="text"
