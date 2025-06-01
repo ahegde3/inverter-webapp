@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const user = await findUserByEmail({ email });
+
     if (!user) {
       return NextResponse.json(
         {
@@ -148,7 +149,7 @@ async function findUserByEmail({
     TableName: "Inverter-db",
     KeyConditionExpression: "PK = :pk AND SK = :sk",
     ExpressionAttributeValues: {
-      ":pk": `ADMIN#${email}`,
+      ":pk": `USER#${email}`,
       ":sk": "PROFILE",
     },
     Limit: 1,
