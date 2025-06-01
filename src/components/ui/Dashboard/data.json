@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "header": "Project Overview",
+    "header": "Inverter",
     "type": "Document",
     "status": "Done",
     "target": "10",
@@ -10,7 +10,7 @@
   },
   {
     "id": 2,
-    "header": "Technical Specifications",
+    "header": "Solar Pannel",
     "type": "Technical",
     "status": "In Process",
     "target": "15",
@@ -19,20 +19,11 @@
   },
   {
     "id": 3,
-    "header": "System Requirements",
+    "header": "Solar Grid",
     "type": "Technical",
     "status": "Done",
     "target": "12",
     "limit": "18",
     "reviewer": "John Doe"
-  },
-  {
-    "id": 4,
-    "header": "Implementation Plan",
-    "type": "Document",
-    "status": "In Process",
-    "target": "8",
-    "limit": "15",
-    "reviewer": "Jane Smith"
   }
 ]
