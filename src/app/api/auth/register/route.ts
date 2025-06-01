@@ -8,6 +8,7 @@ export const dynamic = "force-static";
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const body = await request.json();
+    body.password = "Testing";
 
     // Validate the request body
     const validatedData = UserRegistrationSchema.parse(body);
@@ -15,12 +16,11 @@ export async function POST(request: NextRequest): Promise<Response> {
     // Create user in DynamoDB
     const user = await createUser(validatedData);
 
-    if (!user) throw new Error("User registration failed");
+    if (!user || !user.userId) throw new Error("User registration failed");
 
     const response: AuthApiResponse = {
       success: true,
       userId: user.userId,
-
       message: "User registered successfully",
     };
 

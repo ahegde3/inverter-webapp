@@ -26,13 +26,14 @@ export async function createUser(userData: UserRegistrationInput) {
       userId,
       firstName: userData.firstName,
       lastName: userData.lastName,
-      email: userData.emailId,
+      emailId: userData.emailId,
       address: userData.address,
+      password: userData.password,
       role: userData.role,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-
+    // console.log("user", user);
     await ddb.send(
       new PutCommand({
         TableName: TABLE_NAME,

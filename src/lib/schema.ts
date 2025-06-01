@@ -58,22 +58,27 @@ export const deviceProfileSchema = z.object({
 export type DeviceProfile = z.infer<typeof deviceProfileSchema>;
 
 // Schema for device registration response
-export const deviceRegistrationResponseSchema = z.discriminatedUnion("success", [
-  z.object({
-    success: z.literal(true),
-    deviceId: z.string(),
-    message: z.string(),
-    error: z.undefined(),
-  }),
-  z.object({
-    success: z.literal(false),
-    deviceId: z.undefined(),
-    message: z.undefined(),
-    error: z.string(),
-  }),
-]);
+export const deviceRegistrationResponseSchema = z.discriminatedUnion(
+  "success",
+  [
+    z.object({
+      success: z.literal(true),
+      deviceId: z.string(),
+      message: z.string(),
+      error: z.undefined(),
+    }),
+    z.object({
+      success: z.literal(false),
+      deviceId: z.undefined(),
+      message: z.undefined(),
+      error: z.string(),
+    }),
+  ]
+);
 
-export type DeviceRegistrationResponse = z.infer<typeof deviceRegistrationResponseSchema>;
+export type DeviceRegistrationResponse = z.infer<
+  typeof deviceRegistrationResponseSchema
+>;
 
 // Schema for API response
 export const customerApiResponseSchema = z.discriminatedUnion("success", [
