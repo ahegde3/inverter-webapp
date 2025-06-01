@@ -19,7 +19,10 @@ interface AddAdminDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function AddAdminDialog({ isOpen, onOpenChange }: AddAdminDialogProps) {
+export default function AddAdminDialog({
+  isOpen,
+  onOpenChange,
+}: AddAdminDialogProps) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -30,9 +33,9 @@ export default function AddAdminDialog({ isOpen, onOpenChange }: AddAdminDialogP
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   }
 
@@ -53,10 +56,7 @@ export default function AddAdminDialog({ isOpen, onOpenChange }: AddAdminDialogP
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center justify-start"
-        >
+        <Button variant="ghost" className="flex items-center justify-start">
           <UserPlus className="mr-2 h-4 w-4" />
           Add Admin
         </Button>
@@ -65,7 +65,8 @@ export default function AddAdminDialog({ isOpen, onOpenChange }: AddAdminDialogP
         <DialogHeader>
           <DialogTitle>Add New Admin</DialogTitle>
           <DialogDescription>
-            Enter the details for the new admin user. Click save when you're done.
+            Enter the details for the new admin user. Click save when
+            you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -145,4 +146,4 @@ export default function AddAdminDialog({ isOpen, onOpenChange }: AddAdminDialogP
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   deviceRegistrationSchema,
   deviceRegistrationResponseSchema,
-  type DeviceRegistration,
   type DeviceRegistrationResponse,
 } from "@/lib/schema";
 import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
@@ -38,19 +37,20 @@ export async function POST(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    const { 
-      serialNo, 
-      device_type, 
-      manufacturing_data, 
-      waranty_end_date, 
-      customerId 
+    const {
+      serialNo,
+      device_type,
+      manufacturing_data,
+      waranty_end_date,
+      customerId,
     } = validationResult.data;
 
     // Check if device with this serial number already exists
     console.log("Checking for existing device with serialNo:", serialNo);
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
-      FilterExpression: "begins_with(PK, :pk) AND SK = :sk AND serialNo = :serialNo",
+      FilterExpression:
+        "begins_with(PK, :pk) AND SK = :sk AND serialNo = :serialNo",
       ExpressionAttributeValues: {
         ":pk": "DEVICE#",
         ":sk": "PROFILE",
@@ -144,7 +144,6 @@ export async function POST(
       deviceRegistrationResponseSchema.parse(successResponse);
 
     return NextResponse.json(validatedSuccessResponse, { status: 201 });
-
   } catch (error) {
     console.error("Error registering device:", error);
 
@@ -160,4 +159,4 @@ export async function POST(
 
     return NextResponse.json(validatedErrorResponse, { status: 500 });
   }
-} 
+}
