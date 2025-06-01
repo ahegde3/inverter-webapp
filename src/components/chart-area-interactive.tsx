@@ -119,7 +119,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function Component() {
-  const [timeRange, setTimeRange] = React.useState("90d")
+  const [timeRange, setTimeRange] = React.useState("7d")
 
   const filteredData = React.useMemo(() => {
     if (!chartData || !Array.isArray(chartData)) {
@@ -146,7 +146,7 @@ export function Component() {
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle>Load Generation vs Consumption</CardTitle>
-          <CardDescription>Showing total load for the last 3 months</CardDescription>
+          {/* <CardDescription>Showing total load for the last 3 months</CardDescription> */}
         </div>
         <div className="flex items-center gap-2">
           <ToggleGroup

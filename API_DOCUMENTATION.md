@@ -164,3 +164,144 @@ curl "http://localhost:3000/api/customers?sortBy=emailId&sortOrder=desc"
 - All timestamps are in ISO 8601 format (UTC)
 - Search is case-insensitive and matches partial strings
 - The `id` field is a string to accommodate various ID formats (UUID, sequential, etc.)
+
+## Device Registration API
+
+### POST /api/device
+
+Register a new device in the system.
+
+#### Request Body
+
+| Field               | Type   | Required | Description                                    |
+| ------------------- | ------ | -------- | ---------------------------------------------- |
+| `serialNo`          | string | Yes      | Unique serial number of the device             |
+| `device_type`       | string | Yes      | Type of device (e.g., "INVERTER")             |
+| `manufacturing_data`| string | Yes      | Manufacturing date of the device              |
+| `waranty_end_date`  | string | Yes      | Warranty end date for the device              |
+| `customerId`        | string | Yes      | ID of the customer registering the device     |
+
+#### Example Request
+
+```bash
+POST /api/device
+Content-Type: application/json
+
+{
+  "serialNo": "B455674",
+  "device_type": "INVERTER",
+  "manufacturing_data": "20 Aug 2024",
+  "waranty_end_date": "20 Aug 2025",
+  "customerId": "1234"
+}
+```
+
+#### Response Format
+
+**Success Response (201)**
+
+```json
+{
+  "success": true,
+  "deviceId": "A1234",
+  "message": "Registration successful"
+}
+```
+
+**Error Response (400)**
+
+```json
+{
+  "success": false,
+  "error": "Validation error: serialNo is required"
+}
+```
+
+**Error Response (404)**
+
+```json
+{
+  "success": false,
+  "error": "Customer with ID 1234 not found."
+}
+```
+
+**Error Response (409)**
+
+```json
+{
+  "success": false,
+  "error": "Device with serial number B455674 is already registered."
+}
+```
+
+**Error Response (500)**
+
+```json
+{
+  "success": false,
+  "error": "Internal server error occurred while registering device."
+}
+```
+
+#### HTTP Status Codes
+
+- `201 Created` - Device successfully registered
+- `400 Bad Request` - Invalid request body or validation error
+- `404 Not Found` - Customer not found
+- `409 Conflict` - Device with serial number already exists
+- `500 Internal Server Error` - Server error
+
+#### Usage Examples
+
+##### JavaScript/TypeScript
+
+```typescript
+// Register a new device
+const deviceData = {
+  serialNo: "B455674",
+  device_type: "INVERTER",
+  manufacturing_data: "20 Aug 2024",
+  waranty_end_date: "20 Aug 2025",
+  customerId: "1234"
+};
+
+const response = await fetch("/api/device", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(deviceData),
+});
+
+const result = await response.json();
+
+if (result.success) {
+  console.log("Device registered with ID:", result.deviceId);
+  console.log("Message:", result.message);
+} else {
+  console.error("Registration failed:", result.error);
+}
+```
+
+##### cURL
+
+```bash
+curl -X POST "http://localhost:3000/api/device" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serialNo": "B455674",
+    "device_type": "INVERTER",
+    "manufacturing_data": "20 Aug 2024",
+    "waranty_end_date": "20 Aug 2025",
+    "customerId": "1234"
+  }'
+```
+
+#### Notes
+
+- Each device must have a unique serial number
+- The customer must exist in the system before registering a device
+- Device IDs are automatically generated with the format "A" + timestamp + random characters
+- All request fields are required and must be non-empty strings
+- The system stores devices in DynamoDB with the partition key format `DEVICE#{deviceId}`

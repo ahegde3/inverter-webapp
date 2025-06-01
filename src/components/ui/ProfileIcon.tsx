@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -8,9 +9,12 @@ import {
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import AddAdminDialog from "./AddAdminDialog";
 
 export default function ProfileIcon() {
   const router = useRouter();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   function handleLogout() {
     router.push("/");
     // Implement logout functionality here
@@ -29,6 +33,10 @@ export default function ProfileIcon() {
       </HoverCardTrigger>
       <HoverCardContent className="w-48">
         <div className="flex flex-col space-y-2">
+          <AddAdminDialog 
+            isOpen={isDialogOpen} 
+            onOpenChange={setIsDialogOpen} 
+          />
           <Button
             variant="ghost"
             className="flex items-center justify-start"
