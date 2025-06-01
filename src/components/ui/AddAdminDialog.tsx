@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus } from "lucide-react";
+import { UserRegistrationSchema } from "@/types/auth";
 
 interface AddAdminDialogProps {
   isOpen: boolean;
@@ -26,9 +27,9 @@ export default function AddAdminDialog({
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    emailId: "",
     phone: "",
-    role: "",
+    address: "",
   });
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -39,17 +40,66 @@ export default function AddAdminDialog({
     }));
   }
 
-  function handleAddAdmin() {
+  const addNewAdmin = async (body: object) => {
+    const validationResult = UserRegistrationSchema.safeParse({
+      ...body,
+      role: "ADMIN",
+    });
+
+    if (!validationResult.success) {
+      throw new Error(
+        validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ")
+      );
+    }
+
+    try {
+      console.log(validationResult.data);
+      const response = await fetch(`/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationResult.data),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? data?.error
+            : "Failed to update customer"
+        );
+      }
+
+      // if ("success" in data && data.success) {
+      //   // Refetch customers to update the list
+      //   await fetchCustomers();
+      // } else {
+      //   throw new Error("Invalid response format");
+      // }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      // setError(errorMessage);
+      console.error("Error deleting customer:", errorMessage);
+    }
+  };
+
+  async function handleAddAdmin() {
     // Implement add admin functionality here
     console.log("Adding admin:", formData);
+    await addNewAdmin(formData);
     onOpenChange(false);
     // Reset form
     setFormData({
       firstName: "",
       lastName: "",
-      email: "",
+      emailId: "",
       phone: "",
-      role: "",
+      address: "",
     });
   }
 
@@ -97,14 +147,14 @@ export default function AddAdminDialog({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              Email
+            <Label htmlFor="emailId" className="text-right">
+              emailId
             </Label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
+              id="emailId"
+              name="emailId"
+              type="emailId"
+              value={formData.emailId}
               onChange={handleInputChange}
               className="col-span-3"
               placeholder="Enter email address"
@@ -125,13 +175,13 @@ export default function AddAdminDialog({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="role" className="text-right">
+            <Label htmlFor="address" className="text-right">
               Role
             </Label>
             <Input
-              id="role"
-              name="role"
-              value={formData.role}
+              id="address"
+              name="address"
+              value={formData.address}
               onChange={handleInputChange}
               className="col-span-3"
               placeholder="Enter role (e.g., Admin, Super Admin)"
