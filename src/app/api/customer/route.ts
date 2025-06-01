@@ -20,21 +20,7 @@ import { z } from "zod";
 export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   try {
     const users = await getUsersByRole("CUSTOMER");
-    // const data = await ddb.send(
-    //   new ScanCommand({
-    //     TableName: "Inverter-db",
-    //     FilterExpression: "begins_with(PK, :pk) AND SK = :sk AND #role = :role",
-    //     ExpressionAttributeValues: {
-    //       ":pk": "USER#",
-    //       ":sk": "PROFILE",
-    //       ":role": "CUSTOMER",
-    //     },
-    //     ExpressionAttributeNames: {
-    //       "#role": "role",
-    //     },
-    //   })
-    // );
-    console.log("users", users);
+
     const response = {
       success: true as const,
       data: users,
@@ -113,7 +99,7 @@ export async function PATCH(
   request: NextRequest
 ): Promise<NextResponse<CustomerUpdateResponse>> {
   try {
-    console.log("Received request to update customer");
+
     const body = await request.json();
 
     // Validate the request body

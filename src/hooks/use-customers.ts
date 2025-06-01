@@ -26,6 +26,7 @@ interface UseCustomersReturn {
     hasPreviousPage: boolean;
   } | null;
   refetch: () => void;
+  deleteCustomer: (customerId: string) => Promise<void>;
 }
 
 export function useCustomers(
@@ -53,8 +54,7 @@ export function useCustomers(
       if (sortOrder) params.append("sortOrder", sortOrder);
 
       const response = await fetch(`/api/customer?${params.toString()}`);
-      const data: CustomerApiResponse = await response.json();
-      console.log(data);
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -85,11 +85,53 @@ export function useCustomers(
     fetchCustomers();
   }, [fetchCustomers]);
 
+  const deleteCustomer = async (customerId: string): Promise<void> => {
+
+    if (!customerId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/customer?customer_id=${customerId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? (data as CustomerErrorResponse).error
+            : "Failed to delete customer"
+        );
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      console.error("Error deleting customer:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     customers,
     loading,
     error,
     pagination,
     refetch: fetchCustomers,
+    deleteCustomer,
   };
 }

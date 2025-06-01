@@ -1,5 +1,5 @@
 export interface CustomerData {
-  id: string;
+  userId: string;
   firstName: string;
   lastName: string;
   emailId: string;

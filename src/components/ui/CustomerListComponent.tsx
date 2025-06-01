@@ -34,7 +34,7 @@ export default function CustomerListComponent() {
   // Debounce search query to avoid too many API calls
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  const { customers, loading, error, refetch } = useCustomers({
+  const { customers, deleteCustomer, loading, error, refetch } = useCustomers({
     search: debouncedSearch || undefined,
     limit: 50, // Fetch more customers for better UX
   });
@@ -43,7 +43,7 @@ export default function CustomerListComponent() {
     let canEdit: boolean = false;
     if (!customer) {
       customer = {
-        id: "",
+        userId: "",
         firstName: "",
         lastName: "",
         emailId: "",
@@ -67,8 +67,7 @@ export default function CustomerListComponent() {
     if (editableCustomer) {
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
-      // Here you would typically save to your backend
-      console.log("Saving customer data:", editableCustomer);
+
       // Refetch data to get updated list
       refetch();
     }
@@ -86,6 +85,12 @@ export default function CustomerListComponent() {
         [field]: value,
       });
     }
+  };
+
+  const handleCustomerDelete = async (customerId: string): Promise<void> => {
+    if (!customerId) return;
+    await deleteCustomer(customerId);
+    setIsModalOpen(false);
   };
 
   return (
@@ -129,7 +134,7 @@ export default function CustomerListComponent() {
               </div>
             ) : customers.length > 0 ? (
               customers.map((customer: CustomerData) => (
-                <div key={customer.id}>
+                <div key={customer.userId}>
                   <div className="flex items-center justify-between">
                     <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
                     <RxExternalLink
@@ -256,7 +261,14 @@ export default function CustomerListComponent() {
                     <Button variant="outline" onClick={handleEditClick}>
                       Edit
                     </Button>
-                    <Button variant="destructive">Delete</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() =>
+                        handleCustomerDelete(selectedCustomer.userId)
+                      }
+                    >
+                      Delete
+                    </Button>
                   </>
                 )}
               </div>

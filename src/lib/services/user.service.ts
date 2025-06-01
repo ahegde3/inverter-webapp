@@ -113,7 +113,10 @@ export const getUsersByRole = async (roleName: string): Promise<User[]> => {
     const users = data.Items.map((item) => {
       const userResult = userSchema.safeParse(item);
       if (!userResult.success) {
-        console.error("Invalid user data from DynamoDB:", userResult.error);
+        console.error(
+          "Invalid user data from DynamoDB:",
+          !userResult.success && userResult.error
+        );
         return null;
       }
       return userResult.data;

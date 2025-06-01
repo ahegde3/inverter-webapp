@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+// User schema for authentication and user management
+export const userSchema = z.object({
+  userId: z.string(),
+  email: z.string().email(),
+  password: z.string().min(1),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  role: z.string(),
+  address: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export type User = z.infer<typeof userSchema>;
+
 // Base schema for customer profile data
 export const customerProfileSchema = z.object({
   //   PK: z.string().startsWith("CUSTOMER#"),
@@ -17,13 +32,11 @@ export const customerProfileSchema = z.object({
 // Type for customer profile
 export type CustomerProfile = z.infer<typeof customerProfileSchema>;
 
-
-
 // Schema for API response
 export const customerApiResponseSchema = z.discriminatedUnion("success", [
   z.object({
     success: z.literal(true),
-    data: z.array(customerProfileSchema),
+    data: z.array(userSchema),
     error: z.undefined(),
   }),
   z.object({
@@ -34,21 +47,6 @@ export const customerApiResponseSchema = z.discriminatedUnion("success", [
 ]);
 
 export type CustomerApiResponse = z.infer<typeof customerApiResponseSchema>;
-
-// User schema for authentication and user management
-export const userSchema = z.object({
-  userId: z.string(),
-  email: z.string().email(),
-  password: z.string().min(1),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  role: z.string(),
-  address: z.string(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export type User = z.infer<typeof userSchema>;
 
 export const loginResponseSchema = z.discriminatedUnion("success", [
   z.object({
