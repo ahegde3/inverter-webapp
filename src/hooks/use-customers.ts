@@ -4,6 +4,8 @@ import type {
   CustomerApiResponse,
   CustomerErrorResponse,
 } from "@/types/customer";
+import { customerUpdateSchema } from "@/lib/schema";
+import { UserRegistrationSchema } from "@/types/auth";
 
 interface UseCustomersOptions {
   search?: string;
@@ -27,6 +29,8 @@ interface UseCustomersReturn {
   } | null;
   refetch: () => void;
   deleteCustomer: (customerId: string) => Promise<void>;
+  editCustomerData: (body: object) => Promise<void>;
+  addNewCustomer: (body: object) => Promise<void>;
 }
 
 export function useCustomers(
@@ -86,7 +90,6 @@ export function useCustomers(
   }, [fetchCustomers]);
 
   const deleteCustomer = async (customerId: string): Promise<void> => {
-
     if (!customerId) return;
 
     try {
@@ -126,6 +129,104 @@ export function useCustomers(
     }
   };
 
+  const editCustomerData = async (body: object) => {
+    const validationResult = customerUpdateSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      throw new Error(
+        validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ")
+      );
+    }
+    const customerId = validationResult.data.userId;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/customer?customer_id=${customerId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationResult.data),
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? (data as CustomerErrorResponse).error
+            : "Failed to update customer"
+        );
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      console.error("Error deleting customer:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addNewCustomer = async (body: object) => {
+    const validationResult = UserRegistrationSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      throw new Error(
+        validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ")
+      );
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      console.log(validationResult.data);
+      const response = await fetch(`/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationResult.data),
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? (data as CustomerErrorResponse).error
+            : "Failed to update customer"
+        );
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      console.error("Error deleting customer:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return {
     customers,
     loading,
@@ -133,5 +234,7 @@ export function useCustomers(
     pagination,
     refetch: fetchCustomers,
     deleteCustomer,
+    editCustomerData,
+    addNewCustomer,
   };
 }
