@@ -10,6 +10,7 @@ export const UserRegistrationSchema = z.object({
   firstName: z.string().min(1, "First name is required").max(50),
   lastName: z.string().min(1, "Last name is required").max(50),
   emailId: z.string().email("Invalid email address"),
+  phoneNo: z.string().optional(),
   address: z.string().min(1, "Address is required").max(200),
   password: z.string().optional(),
   role: z

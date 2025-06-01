@@ -1,6 +1,10 @@
 import { NextRequest } from "next/server";
 import { UserRegistrationSchema, type AuthApiResponse } from "@/types/auth";
-import { createUser, UserServiceError } from "@/lib/services/user.service";
+import {
+  createUser,
+  UserServiceError,
+  encryptPassword,
+} from "@/lib/services/user.service";
 
 // Configure route for static export
 export const dynamic = "force-static";
@@ -8,7 +12,9 @@ export const dynamic = "force-static";
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const body = await request.json();
-    body.password = "Testing";
+    if (body.password) body.password = "Testing";
+
+    body.password = encryptPassword(body.password);
 
     // Validate the request body
     const validatedData = UserRegistrationSchema.parse(body);

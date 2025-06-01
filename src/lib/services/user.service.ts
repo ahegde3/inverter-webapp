@@ -27,6 +27,7 @@ export async function createUser(userData: UserRegistrationInput) {
       firstName: userData.firstName,
       lastName: userData.lastName,
       emailId: userData.emailId,
+      phoneNo: userData.phoneNo,
       address: userData.address,
       password: userData.password,
       role: userData.role,
