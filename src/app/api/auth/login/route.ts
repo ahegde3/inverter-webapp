@@ -1,31 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { ddb } from "@/lib/dynamo";
 import { z } from "zod";
-import { userSchema, type User } from "@/lib/schema";
+import { userSchema } from "@/lib/schema";
+import { encryptPassword, findUserByEmail } from "@/lib/services/user.service";
 
 // Configure route for static export
 export const dynamic = "force-static";
-
-// Encryption key - should match the frontend key
-const ENCRYPTION_KEY = process.env.SECRET_KEY || "123456";
-
-//Simple XOR encryption function
-const encryptPassword = (password: string): string => {
-  try {
-    let encrypted = "";
-    for (let i = 0; i < password.length; i++) {
-      const passwordChar = password.charCodeAt(i);
-      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      encrypted += String.fromCharCode(passwordChar ^ keyChar);
-    }
-    // Base64 encode the encrypted string
-    return btoa(encrypted);
-  } catch (error) {
-    console.error("Error encrypting password:", error);
-    throw new Error("Password encryption failed");
-  }
-};
 
 // Login request schema
 const loginRequestSchema = z.object({
@@ -136,35 +115,4 @@ export async function GET() {
     } as LoginResponse,
     { status: 405 }
   );
-}
-
-async function findUserByEmail({
-  email,
-}: {
-  email: string;
-}): Promise<User | null> {
-  if (!email) return null;
-
-  const params = {
-    TableName: "Inverter-db",
-    KeyConditionExpression: "PK = :pk AND SK = :sk",
-    ExpressionAttributeValues: {
-      ":pk": `USER#${email}`,
-      ":sk": "PROFILE",
-    },
-    Limit: 1,
-  };
-
-  const result = await ddb.send(new QueryCommand(params));
-
-  if (!result.Items || result.Items.length === 0) return null;
-
-  // Validate the DynamoDB response against our schema
-  const userResult = userSchema.safeParse(result.Items[0]);
-  if (!userResult.success) {
-    console.error("Invalid user data from DynamoDB:", userResult.error);
-    return null;
-  }
-
-  return userResult.data;
 }

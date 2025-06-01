@@ -4,6 +4,10 @@ import { type UserRegistrationInput } from "@/types/auth";
 import { v4 as uuidv4 } from "uuid";
 
 const TABLE_NAME = "Inverter-db";
+// Encryption key - should match the frontend key
+const ENCRYPTION_KEY = process.env.SECRET_KEY || "123456";
+
+//Simple XOR encryption function
 
 export class UserServiceError extends Error {
   constructor(message: string) {
@@ -54,3 +58,50 @@ export async function createUser(userData: UserRegistrationInput) {
     throw new UserServiceError("Failed to create user");
   }
 }
+
+export async function findUserByEmail({
+  email,
+}: {
+  email: string;
+}): Promise<User | null> {
+  if (!email) return null;
+
+  const params = {
+    TableName: "Inverter-db",
+    KeyConditionExpression: "PK = :pk AND SK = :sk",
+    ExpressionAttributeValues: {
+      ":pk": `USER#${email}`,
+      ":sk": "PROFILE",
+    },
+    Limit: 1,
+  };
+
+  const result = await ddb.send(new QueryCommand(params));
+
+  if (!result.Items || result.Items.length === 0) return null;
+
+  // Validate the DynamoDB response against our schema
+  const userResult = userSchema.safeParse(result.Items[0]);
+  if (!userResult.success) {
+    console.error("Invalid user data from DynamoDB:", userResult.error);
+    return null;
+  }
+
+  return userResult.data;
+}
+
+export const encryptPassword = (password: string): string => {
+  try {
+    let encrypted = "";
+    for (let i = 0; i < password.length; i++) {
+      const passwordChar = password.charCodeAt(i);
+      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      encrypted += String.fromCharCode(passwordChar ^ keyChar);
+    }
+    // Base64 encode the encrypted string
+    return btoa(encrypted);
+  } catch (error) {
+    console.error("Error encrypting password:", error);
+    throw new Error("Password encryption failed");
+  }
+};

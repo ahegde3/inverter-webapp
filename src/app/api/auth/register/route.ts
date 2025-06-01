@@ -19,7 +19,15 @@ export async function POST(request: NextRequest): Promise<Response> {
 
     const response: AuthApiResponse = {
       success: true,
-      data: user,
+      data: {
+        userId: user.userId,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email,
+        address: user.address,
+        role: user.role,
+        created_at: user.createdAt
+      },
       message: "User registered successfully",
     };
 

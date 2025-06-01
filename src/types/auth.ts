@@ -19,12 +19,12 @@ export const UserRegistrationSchema = z.object({
 export type UserRegistrationInput = z.infer<typeof UserRegistrationSchema>;
 
 export interface UserResponse {
-  id: string;
+  userId: string;
   first_name: string;
   last_name: string;
   email: string;
   address: string;
-  role: keyof typeof UserRole;
+  role: string;
   created_at: string;
 }
 
