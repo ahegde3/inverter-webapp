@@ -189,14 +189,14 @@ export async function DELETE(
   request: NextRequest
 ): Promise<NextResponse<CustomerDeleteResponse>> {
   try {
-    const emailId = request.nextUrl.searchParams.get("emailId");
+    const customerId = request.nextUrl.searchParams.get("customer_id");
 
-    if (!emailId) {
+    if (!customerId) {
       const errorResponse = {
         success: false,
         user_id: undefined,
         message: undefined,
-        error: "emailId is required for deleting a customer",
+        error: "customerId is required for deleting a customer",
       };
 
       const validatedErrorResponse =
@@ -205,13 +205,18 @@ export async function DELETE(
     }
 
     // First find the customer using emailId filter
-    console.log("Searching for customer with emailId:", emailId);
+    console.log("Searching for customer with customerId:", customerId);
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
-      FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
+      FilterExpression:
+        "begins_with(PK, :pk) AND SK = :sk AND #userId = :userId",
       ExpressionAttributeValues: {
-        ":pk": `USER#${emailId}`,
+        ":pk": "USER#",
         ":sk": "PROFILE",
+        ":userId": customerId,
+      },
+      ExpressionAttributeNames: {
+        "#userId": "userId",
       },
     });
 
@@ -223,7 +228,7 @@ export async function DELETE(
         success: false,
         user_id: undefined,
         message: undefined,
-        error: `Customer with emailId ${emailId} not found.`,
+        error: `Customer with customerId ${customerId} not found.`,
       };
 
       const validatedErrorResponse =
@@ -231,6 +236,7 @@ export async function DELETE(
       return NextResponse.json(validatedErrorResponse, { status: 404 });
     }
 
+    const emailId = scanResult.Items[0].emailId;
     const deleteCommand = new DeleteCommand({
       TableName: "Inverter-db",
       Key: {

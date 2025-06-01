@@ -15,8 +15,11 @@ const Navbar = () => {
       }}
     >
       <Link href="/">
-        <h1 className="text-xl md:text-3xl font-bold" style={{ color: "var(--primary)" }}>
-          AceInverter
+        <h1
+          className="text-xl md:text-3xl font-bold"
+          style={{ color: "var(--primary)" }}
+        >
+          VKInverter
         </h1>
       </Link>
       <div className="flex items-center gap-2 md:gap-4">
