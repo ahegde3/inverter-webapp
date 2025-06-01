@@ -39,6 +39,7 @@ export default function CustomerListComponent() {
 
   const {
     customers,
+    addNewCustomer,
     editCustomerData,
     deleteCustomer,
     loading,
@@ -76,7 +77,10 @@ export default function CustomerListComponent() {
 
   const handleSaveClick = () => {
     if (editableCustomer) {
-      editCustomerData(editableCustomer);
+      if (isCustomerAddition) {
+        addNewCustomer({...editableCustomer,role:"CUSTOMER"});
+      }
+      else editCustomerData(editableCustomer);
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
       // Refetch data to get updated list

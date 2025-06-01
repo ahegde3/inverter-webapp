@@ -21,12 +21,12 @@ export async function createUser(userData: UserRegistrationInput) {
     const userId = uuidv4();
 
     const user = {
-      PK: `USER#${userData.email}`,
+      PK: `USER#${userData.emailId}`,
       SK: "PROFILE",
       userId,
-      firstName: userData.first_name,
-      lastName: userData.last_name,
-      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.emailId,
       address: userData.address,
       role: userData.role,
       createdAt: timestamp,

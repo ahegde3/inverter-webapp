@@ -7,10 +7,11 @@ export const UserRole = {
 } as const;
 
 export const UserRegistrationSchema = z.object({
-  first_name: z.string().min(1, "First name is required").max(50),
-  last_name: z.string().min(1, "Last name is required").max(50),
-  email: z.string().email("Invalid email address"),
+  firstName: z.string().min(1, "First name is required").max(50),
+  lastName: z.string().min(1, "Last name is required").max(50),
+  emailId: z.string().email("Invalid email address"),
   address: z.string().min(1, "Address is required").max(200),
+  password: z.string().optional(),
   role: z
     .enum([UserRole.CUSTOMER, UserRole.ADMIN, UserRole.TECHNICIAN])
     .default(UserRole.CUSTOMER),
@@ -30,7 +31,7 @@ export interface UserResponse {
 
 export interface AuthSuccessResponse {
   success: true;
-  data: UserResponse;
+  userId: string;
   message: string;
 }
 
