@@ -32,3 +32,25 @@ export interface CustomerErrorResponse {
 }
 
 export type CustomerApiResponse = CustomerResponse | CustomerErrorResponse;
+
+// Types for customer update
+export interface CustomerUpdateRequest {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  address?: string;
+  role?: "CUSTOMER";
+}
+
+export interface CustomerUpdateSuccessResponse {
+  success: true;
+  data: CustomerData;
+  message: string;
+}
+
+export interface CustomerUpdateErrorResponse {
+  success: false;
+  error: string;
+}
+
+export type CustomerUpdateResponse = CustomerUpdateSuccessResponse | CustomerUpdateErrorResponse;

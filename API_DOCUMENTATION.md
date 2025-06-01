@@ -164,3 +164,209 @@ curl "http://localhost:3000/api/customers?sortBy=emailId&sortOrder=desc"
 - All timestamps are in ISO 8601 format (UTC)
 - Search is case-insensitive and matches partial strings
 - The `id` field is a string to accommodate various ID formats (UUID, sequential, etc.)
+
+### PATCH /api/customer/{id}
+
+Updates an existing customer's information.
+
+#### Path Parameters
+
+| Parameter | Type   | Required | Description                                    |
+| --------- | ------ | -------- | ---------------------------------------------- |
+| `id`      | string | Yes      | Customer's userId (numeric ID, e.g., "1")     |
+
+#### Request Body
+
+| Field        | Type   | Required | Description                           |
+| ------------ | ------ | -------- | ------------------------------------- |
+| `first_name` | string | No       | Customer's first name                 |
+| `last_name`  | string | No       | Customer's last name                  |
+| `email`      | string | No       | Customer's email address              |
+| `address`    | string | No       | Customer's address                    |
+| `role`       | string | No       | Customer role (must be "CUSTOMER")    |
+
+#### Example Requests
+
+```bash
+# Update customer name and email using userId
+PATCH /api/customer/1
+Content-Type: application/json
+
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com"
+}
+
+# Update customer address using userId
+PATCH /api/customer/1
+Content-Type: application/json
+
+{
+  "address": "456 Oak Street, New York, NY 10002"
+}
+
+# Update multiple fields using userId
+PATCH /api/customer/1
+Content-Type: application/json
+
+{
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane@example.com",
+  "address": "123 Main St",
+  "role": "CUSTOMER"
+}
+```
+
+#### Response Format
+
+**Success Response (200)**
+
+```json
+{
+  "success": true,
+  "data": {
+    "email": "jane.doe@example.com",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "address": "456 Oak Street, New York, NY 10002",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-20T14:45:00Z"
+  },
+  "message": "Customer 1 updated successfully."
+}
+```
+
+**Error Response (400) - Invalid ID**
+
+```json
+{
+  "success": false,
+  "error": "Invalid customer ID provided."
+}
+```
+
+**Error Response (400) - Validation Error**
+
+```json
+{
+  "success": false,
+  "error": "Validation error: Invalid email format"
+}
+```
+
+**Error Response (404) - Customer Not Found**
+
+```json
+{
+  "success": false,
+  "error": "Customer with ID 1 not found."
+}
+```
+
+**Error Response (500) - Server Error**
+
+```json
+{
+  "success": false,
+  "error": "Internal server error occurred while updating customer."
+}
+```
+
+#### Response Fields
+
+| Field     | Type    | Description                              |
+| --------- | ------- | ---------------------------------------- |
+| `success` | boolean | Indicates if the request was successful  |
+| `data`    | object  | Updated customer data (success only)     |
+| `message` | string  | Success message (success only)           |
+| `error`   | string  | Error message (error only)               |
+
+#### Updated Customer Data Fields
+
+| Field       | Type   | Description                                       |
+| ----------- | ------ | ------------------------------------------------- |
+| `email`     | string | Customer's email address                          |
+| `firstName` | string | Customer's first name                             |
+| `lastName`  | string | Customer's last name                              |
+| `address`   | string | Customer's address                                |
+| `createdAt` | string | ISO 8601 timestamp when customer was created     |
+| `updatedAt` | string | ISO 8601 timestamp when customer was last updated|
+
+#### HTTP Status Codes
+
+- `200 OK` - Customer updated successfully
+- `400 Bad Request` - Invalid request data or customer ID
+- `404 Not Found` - Customer not found
+- `500 Internal Server Error` - Server error
+
+#### Usage Examples
+
+##### JavaScript/TypeScript
+
+```typescript
+// Update customer information using userId
+const updateCustomer = async (userId: string, updates: CustomerUpdateRequest) => {
+  try {
+    const response = await fetch(`/api/customer/${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      console.log("Customer updated:", result.data);
+      console.log("Success message:", result.message);
+      return result.data;
+    } else {
+      console.error("Update failed:", result.error);
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    throw error;
+  }
+};
+
+// Example usage with userId
+updateCustomer("1", {
+  first_name: "Jane",
+  last_name: "Doe",
+  email: "jane@example.com"
+});
+```
+
+##### cURL
+
+```bash
+# Update customer name using userId
+curl -X PATCH "http://localhost:3000/api/customer/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "first_name": "Jane",
+    "last_name": "Doe"
+  }'
+
+# Update customer email and address using userId
+curl -X PATCH "http://localhost:3000/api/customer/1" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "jane.doe@example.com",
+    "address": "456 Oak Street, New York, NY 10002"
+  }'
+```
+
+#### Notes
+
+- The `id` parameter should be the customer's `userId` (numeric ID like "1"), not the email
+- The endpoint will first find the customer by `userId`, then use the found email to perform the update
+- All fields in the request body are optional - you can update just the fields you need
+- The `updatedAt` timestamp is automatically set to the current Unix timestamp when any field is updated
+- Field validation is performed on all provided fields
+- The customer must exist before it can be updated
+- Timestamps are stored as Unix timestamps and converted to ISO 8601 format in responses

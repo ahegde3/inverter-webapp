@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useCustomers } from "@/hooks/use-customers";
+import { useCustomerUpdate } from "@/hooks/use-customer-update";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type { CustomerData } from "@/types/customer";
+import type { CustomerData, CustomerUpdateRequest } from "@/types/customer";
 
 export default function CustomerListComponent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,8 @@ export default function CustomerListComponent() {
   const [editableCustomer, setEditableCustomer] = useState<CustomerData | null>(
     null
   );
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
   // Debounce search query to avoid too many API calls
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
@@ -39,8 +42,19 @@ export default function CustomerListComponent() {
     limit: 50, // Fetch more customers for better UX
   });
 
+  const { 
+    updateCustomer, 
+    loading: updateLoading, 
+    error: updateError, 
+    success: updateSuccess 
+  } = useCustomerUpdate();
+
   const handleCustomerClick = (customer: CustomerData | void) => {
     let canEdit: boolean = false;
+    // Clear any previous save messages
+    setSaveError(null);
+    setSaveSuccess(null);
+    
     if (!customer) {
       customer = {
         id: "",
@@ -61,22 +75,69 @@ export default function CustomerListComponent() {
 
   const handleEditClick = () => {
     setIsEditable(true);
+    setSaveError(null);
+    setSaveSuccess(null);
   };
 
-  const handleSaveClick = () => {
-    if (editableCustomer) {
-      setSelectedCustomer(editableCustomer);
-      setIsEditable(false);
-      // Here you would typically save to your backend
-      console.log("Saving customer data:", editableCustomer);
-      // Refetch data to get updated list
-      refetch();
+  const handleSaveClick = async () => {
+    // Validate that we have customer data to save
+    if (!editableCustomer || !selectedCustomer) {
+      setSaveError("No customer data to save");
+      return;
+    }
+
+    // Clear any previous messages
+    setSaveError(null);
+    setSaveSuccess(null);
+
+    // Check if this is a new customer (we don't support creating new customers yet)
+    if (!selectedCustomer.id) {
+      setSaveError("Creating new customers is not yet implemented");
+      return;
+    }
+
+    try {
+      // Prepare the update data by mapping from CustomerData to CustomerUpdateRequest
+      const updateData: CustomerUpdateRequest = {
+        first_name: editableCustomer.firstName,
+        last_name: editableCustomer.lastName,
+        email: editableCustomer.emailId,
+        address: editableCustomer.address,
+        role: "CUSTOMER"
+      };
+
+      console.log("Updating customer:", selectedCustomer.id, updateData);
+
+      // Call the update API
+      const updatedCustomer = await updateCustomer(selectedCustomer.id, updateData);
+
+      if (updatedCustomer) {
+        // Success: Update the UI with the new data
+        setSelectedCustomer(updatedCustomer);
+        setEditableCustomer(updatedCustomer);
+        setIsEditable(false);
+        setSaveSuccess("Customer updated successfully!");
+        
+        // Refresh the customer list to show the updated information
+        refetch();
+        
+        console.log("Customer updated successfully:", updatedCustomer);
+      } else {
+        setSaveError("Failed to update customer - no data returned");
+      }
+    } catch (error) {
+      // Handle any errors that occurred during the update
+      console.error("Error updating customer:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to update customer";
+      setSaveError(errorMessage);
     }
   };
 
   const handleCancelEdit = () => {
     setEditableCustomer(selectedCustomer);
     setIsEditable(false);
+    setSaveError(null);
+    setSaveSuccess(null);
   };
 
   const updateEditableCustomer = (field: keyof CustomerData, value: string) => {
@@ -85,8 +146,21 @@ export default function CustomerListComponent() {
         ...editableCustomer,
         [field]: value,
       });
+      // Clear messages when user starts editing
+      setSaveError(null);
+      setSaveSuccess(null);
     }
   };
+
+  // Auto-clear success message after 3 seconds
+  useEffect(() => {
+    if (saveSuccess) {
+      const timer = setTimeout(() => {
+        setSaveSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveSuccess]);
 
   return (
     <>
@@ -155,6 +229,20 @@ export default function CustomerListComponent() {
           </DialogHeader>
           {selectedCustomer && editableCustomer && (
             <div className="grid gap-4 py-4">
+              {/* Success Message */}
+              {saveSuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-3 py-2 rounded-md text-sm">
+                  {saveSuccess}
+                </div>
+              )}
+              
+              {/* Error Message */}
+              {(saveError || updateError) && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 rounded-md text-sm">
+                  {saveError || updateError}
+                </div>
+              )}
+
               <div className="grid grid-cols-4 items-center gap-4">
                 <label
                   htmlFor="firstName"
@@ -244,11 +332,19 @@ export default function CustomerListComponent() {
               <div className="flex items-center justify-between">
                 {isEditable ? (
                   <>
-                    <Button variant="outline" onClick={handleCancelEdit}>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelEdit}
+                      disabled={updateLoading}
+                    >
                       Cancel
                     </Button>
-                    <Button variant="default" onClick={handleSaveClick}>
-                      Save
+                    <Button 
+                      variant="default" 
+                      onClick={handleSaveClick}
+                      disabled={updateLoading}
+                    >
+                      {updateLoading ? "Saving..." : "Save"}
                     </Button>
                   </>
                 ) : (
