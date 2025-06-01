@@ -1,27 +1,31 @@
 import { NextResponse } from "next/server";
-import { ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { ddb } from "@/lib/dynamo";
 import {
   customerApiResponseSchema,
   type CustomerApiResponse,
 } from "@/lib/schema";
+import { getUsersByRole } from "@/lib/services/user.service";
 
 export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   try {
-    const data = await ddb.send(
-      new ScanCommand({
-        TableName: "Inverter-db",
-        FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
-        ExpressionAttributeValues: {
-          ":pk": "CUSTOMER#",
-          ":sk": "PROFILE",
-        },
-      })
-    );
-
+    const users = await getUsersByRole("CUSTOMER");
+    // const data = await ddb.send(
+    //   new ScanCommand({
+    //     TableName: "Inverter-db",
+    //     FilterExpression: "begins_with(PK, :pk) AND SK = :sk AND #role = :role",
+    //     ExpressionAttributeValues: {
+    //       ":pk": "USER#",
+    //       ":sk": "PROFILE",
+    //       ":role": "CUSTOMER",
+    //     },
+    //     ExpressionAttributeNames: {
+    //       "#role": "role",
+    //     },
+    //   })
+    // );
+    console.log("users", users);
     const response = {
       success: true as const,
-      data: data.Items || [],
+      data: users,
       error: undefined,
     } as const;
 

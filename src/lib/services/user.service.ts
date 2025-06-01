@@ -1,13 +1,12 @@
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
 import { type UserRegistrationInput } from "@/types/auth";
 import { v4 as uuidv4 } from "uuid";
+import { User, userSchema } from "@/lib/schema";
 
 const TABLE_NAME = "Inverter-db";
 // Encryption key - should match the frontend key
 const ENCRYPTION_KEY = process.env.SECRET_KEY || "123456";
-
-//Simple XOR encryption function
 
 export class UserServiceError extends Error {
   constructor(message: string) {
@@ -67,7 +66,7 @@ export async function findUserByEmail({
   if (!email) return null;
 
   const params = {
-    TableName: "Inverter-db",
+    TableName: TABLE_NAME,
     KeyConditionExpression: "PK = :pk AND SK = :sk",
     ExpressionAttributeValues: {
       ":pk": `USER#${email}`,
@@ -89,6 +88,43 @@ export async function findUserByEmail({
 
   return userResult.data;
 }
+
+export const getUsersByRole = async (roleName: string): Promise<User[]> => {
+  if (!roleName) throw new Error("Invalid params");
+  try {
+    const params = {
+      TableName: "Inverter-db",
+      FilterExpression: "begins_with(PK, :pk) AND SK = :sk AND #role = :role",
+      ExpressionAttributeValues: {
+        ":pk": "USER#",
+        ":sk": "PROFILE",
+        ":role": roleName,
+      },
+      ExpressionAttributeNames: {
+        "#role": "role",
+      },
+    };
+    const data = await ddb.send(new ScanCommand(params));
+    console.log(data);
+
+    if (!data.Items) return [];
+
+    // Validate and transform each user
+    const users = data.Items.map((item) => {
+      const userResult = userSchema.safeParse(item);
+      if (!userResult.success) {
+        console.error("Invalid user data from DynamoDB:", userResult.error);
+        return null;
+      }
+      return userResult.data;
+    }).filter((user): user is User => user !== null);
+
+    return users;
+  } catch (error) {
+    console.error("Failed while fetching users:", error);
+    throw new UserServiceError("Failed to fetch users");
+  }
+};
 
 export const encryptPassword = (password: string): string => {
   try {
