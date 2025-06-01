@@ -7,7 +7,6 @@ import {
   // type CustomerUpdate,
   customerUpdateResponseSchema,
   customerDeleteResponseSchema,
-  type CustomerProfile,
   type CustomerDeleteResponse,
   type CustomerUpdateResponse,
 } from "@/lib/schema";
@@ -114,7 +113,7 @@ export async function PATCH(
       return NextResponse.json(validatedErrorResponse, { status: 404 });
     }
 
-    const customer = scanResult.Items[0];
+    // const customer = scanResult.Items[0];
 
     // Build update expression dynamically based on provided fields
     const updateExpressions: string[] = [];
@@ -123,8 +122,8 @@ export async function PATCH(
 
     // Map request fields to database fields
     const fieldMappings: Record<string, string> = {
-      first_name: "firstName",
-      last_name: "lastName",
+      firstName: "firstName",
+      lastName: "lastName",
       emailId: "email",
       address: "address",
     };
@@ -143,104 +142,42 @@ export async function PATCH(
       }
     });
 
-    // Always update the updatedAt field with current timestamp
-    updateExpressions.push("#updatedAt = :updatedAt");
-    expressionAttributeNames["#updatedAt"] = "updatedAt";
-    expressionAttributeValues[":updatedAt"] = Math.floor(
-      Date.now() / 1000
-    ).toString(); // Unix timestamp as string
+    const updateExpression = `SET ${updateExpressions.join(", ")}`;
 
-    if (updateExpressions.length === 1) {
-      // Only updatedAt was added, meaning no actual fields to update
-      const errorResponse = {
-        success: false,
-        data: undefined,
-        message: undefined,
-        error: "No valid fields provided for update.",
-      };
-
-      const validatedErrorResponse =
-        customerUpdateResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 400 });
-    }
-
-    // Perform the update using the found customer's PK and SK
-    console.log("Updating customer:", customer.PK);
     const updateCommand = new UpdateCommand({
       TableName: "Inverter-db",
       Key: {
-        PK: customer.PK,
-        SK: customer.SK,
+        PK: `USER#${emailId}`,
+        SK: "PROFILE",
       },
-      UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+      UpdateExpression: updateExpression,
       ExpressionAttributeNames: expressionAttributeNames,
       ExpressionAttributeValues: expressionAttributeValues,
-      ReturnValues: "ALL_NEW",
-      ConditionExpression: "attribute_exists(PK) AND attribute_exists(SK)",
     });
 
-    try {
-      const updateResult = await ddb.send(updateCommand);
-      console.log("Update result:", updateResult);
+    const updateResult = await ddb.send(updateCommand);
+    console.log("Update result:", updateResult);
 
-      if (!updateResult.Attributes) {
-        throw new Error("Update operation did not return updated attributes");
-      }
+    const response: CustomerUpdateResponse = {
+      success: true,
+      message: "Customer updated successfully",
+      error: undefined,
+    };
 
-      // Transform the DynamoDB response to match our schema
-      const updatedCustomer: CustomerProfile = {
-        email: updateResult.Attributes.email,
-        firstName: updateResult.Attributes.firstName,
-        lastName: updateResult.Attributes.lastName,
-        address: updateResult.Attributes.address,
-        createdAt: new Date(
-          parseInt(updateResult.Attributes.createdAt) * 1000
-        ).toISOString(),
-        updatedAt: new Date(
-          parseInt(updateResult.Attributes.updatedAt) * 1000
-        ).toISOString(),
-      };
+    // Validate response with Zod schema
+    const validatedResponse = customerUpdateResponseSchema.parse(response);
 
-      const successResponse = {
-        success: true,
-        data: updatedCustomer,
-        message: "Customer updated successfully",
-        error: undefined,
-      };
-
-      const validatedSuccessResponse =
-        customerUpdateResponseSchema.parse(successResponse);
-
-      return NextResponse.json(validatedSuccessResponse, { status: 200 });
-    } catch (error) {
-      // Check if the error is a ConditionalCheckFailedException
-      if (
-        error instanceof Error &&
-        error.name === "ConditionalCheckFailedException"
-      ) {
-        const errorResponse = {
-          success: false,
-          data: undefined,
-          message: undefined,
-          error: `Customer with email ${emailId} not found or was deleted concurrently.`,
-        };
-
-        const validatedErrorResponse =
-          customerUpdateResponseSchema.parse(errorResponse);
-        return NextResponse.json(validatedErrorResponse, { status: 404 });
-      }
-      throw error; // Re-throw other errors to be caught by the outer catch block
-    }
+    return NextResponse.json(validatedResponse);
   } catch (error) {
     console.error("Error updating customer:", error);
 
     const errorResponse = {
       success: false,
-      data: undefined,
       message: undefined,
-      error: "Internal server error occurred while updating customer.",
+      error: "Internal server error occurred while updating customer",
     };
 
+    // Validate error response
     const validatedErrorResponse =
       customerUpdateResponseSchema.parse(errorResponse);
 
@@ -252,17 +189,14 @@ export async function DELETE(
   request: NextRequest
 ): Promise<NextResponse<CustomerDeleteResponse>> {
   try {
-    console.log("Received request to delete customer");
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("customer_id");
+    const emailId = request.nextUrl.searchParams.get("emailId");
 
-    // Validate the customer ID
-    if (!userId || typeof userId !== "string") {
-      const errorResponse: CustomerDeleteResponse = {
+    if (!emailId) {
+      const errorResponse = {
         success: false,
         user_id: undefined,
         message: undefined,
-        error: "Invalid customer ID provided.",
+        error: "emailId is required for deleting a customer",
       };
 
       const validatedErrorResponse =
@@ -270,92 +204,66 @@ export async function DELETE(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    // First find the customer using userId filter
-    console.log("Searching for customer with userId:", userId);
+    // First find the customer using emailId filter
+    console.log("Searching for customer with emailId:", emailId);
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
-      FilterExpression:
-        "begins_with(PK, :pk) AND SK = :sk AND #userId = :userId",
+      FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
       ExpressionAttributeValues: {
-        ":pk": "USER#",
+        ":pk": `USER#${emailId}`,
         ":sk": "PROFILE",
-        ":userId": userId, // Convert to number since userId might be stored as number
-      },
-      ExpressionAttributeNames: {
-        "#userId": "userId",
       },
     });
 
-    console.log("Scan command:", JSON.stringify(scanCommand.input, null, 2));
     const scanResult = await ddb.send(scanCommand);
-    console.log("Scan result:", JSON.stringify(scanResult, null, 2));
+    console.log("Scan result:", scanResult);
 
     if (!scanResult.Items || scanResult.Items.length === 0) {
-      // Let's try without the PK prefix to debug
-      throw new Error("User not found");
+      const errorResponse = {
+        success: false,
+        user_id: undefined,
+        message: undefined,
+        error: `Customer with emailId ${emailId} not found.`,
+      };
+
+      const validatedErrorResponse =
+        customerDeleteResponseSchema.parse(errorResponse);
+      return NextResponse.json(validatedErrorResponse, { status: 404 });
     }
 
-    const customer = scanResult.Items[0];
-
-    // Now delete using the PK and SK from the found item
     const deleteCommand = new DeleteCommand({
       TableName: "Inverter-db",
       Key: {
-        PK: customer.PK,
-        SK: customer.SK,
+        PK: `USER#${emailId}`,
+        SK: "PROFILE",
       },
-      ReturnValues: "ALL_OLD",
-      ConditionExpression: "attribute_exists(PK) AND attribute_exists(SK)",
     });
 
-    try {
-      const deleteResult = await ddb.send(deleteCommand);
-      console.log("Delete result:", deleteResult);
+    const deleteResult = await ddb.send(deleteCommand);
+    console.log("Delete result:", deleteResult);
 
-      if (!deleteResult.Attributes) {
-        throw new Error("Delete operation did not return deleted attributes");
-      }
+    const response: CustomerDeleteResponse = {
+      success: true,
+      user_id: emailId,
+      message: "Customer deleted successfully",
+      error: undefined,
+    };
 
-      const successResponse: CustomerDeleteResponse = {
-        success: true,
-        user_id: userId,
-        message: "Customer deleted successfully",
-        error: undefined,
-      };
+    // Validate response with Zod schema
+    const validatedResponse = customerDeleteResponseSchema.parse(response);
 
-      const validatedSuccessResponse =
-        customerDeleteResponseSchema.parse(successResponse);
-
-      return NextResponse.json(validatedSuccessResponse, { status: 200 });
-    } catch (error) {
-      // Check if the error is a ConditionalCheckFailedException
-      if (
-        error instanceof Error &&
-        error.name === "ConditionalCheckFailedException"
-      ) {
-        const errorResponse: CustomerDeleteResponse = {
-          success: false,
-          user_id: undefined,
-          message: undefined,
-          error: `Customer with ID ${userId} not found or was deleted concurrently.`,
-        };
-
-        const validatedErrorResponse =
-          customerDeleteResponseSchema.parse(errorResponse);
-        return NextResponse.json(validatedErrorResponse, { status: 404 });
-      }
-      throw error; // Re-throw other errors to be caught by the outer catch block
-    }
+    return NextResponse.json(validatedResponse);
   } catch (error) {
     console.error("Error deleting customer:", error);
 
-    const errorResponse: CustomerDeleteResponse = {
+    const errorResponse = {
       success: false,
       user_id: undefined,
       message: undefined,
-      error: "Internal server error occurred while deleting customer.",
+      error: "Internal server error occurred while deleting customer",
     };
 
+    // Validate error response
     const validatedErrorResponse =
       customerDeleteResponseSchema.parse(errorResponse);
 

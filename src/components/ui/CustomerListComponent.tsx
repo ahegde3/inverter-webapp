@@ -37,7 +37,14 @@ export default function CustomerListComponent() {
   // Debounce search query to avoid too many API calls
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
 
-  const { customers, deleteCustomer, loading, error, refetch } = useCustomers({
+  const {
+    customers,
+    editCustomerData,
+    deleteCustomer,
+    loading,
+    error,
+    refetch,
+  } = useCustomers({
     search: debouncedSearch || undefined,
     limit: 50, // Fetch more customers for better UX
   });
@@ -69,6 +76,7 @@ export default function CustomerListComponent() {
 
   const handleSaveClick = () => {
     if (editableCustomer) {
+      editCustomerData(editableCustomer);
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
       // Refetch data to get updated list

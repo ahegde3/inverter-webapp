@@ -3,7 +3,7 @@ import { z } from "zod";
 // User schema for authentication and user management
 export const userSchema = z.object({
   userId: z.string(),
-  email: z.string().email(),
+  emailId: z.string().email(),
   password: z.string().min(1),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -19,7 +19,7 @@ export type User = z.infer<typeof userSchema>;
 export const customerProfileSchema = z.object({
   //   PK: z.string().startsWith("CUSTOMER#"),
   //   SK: z.literal("PROFILE"),
-  email: z.string().email(),
+  emailId: z.string().email(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   //   phoneNumber: z.string().optional(),
@@ -69,8 +69,8 @@ export type LoginResponseSchema = z.infer<typeof loginResponseSchema>;
 // Schema for customer update request
 export const customerUpdateSchema = z.object({
   userId: z.string(),
-  first_name: z.string().min(1).optional(),
-  last_name: z.string().min(1).optional(),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
   emailId: z.string().email().optional(),
   address: z.string().min(1).optional(),
 });
@@ -81,13 +81,13 @@ export type CustomerUpdate = z.infer<typeof customerUpdateSchema>;
 export const customerUpdateResponseSchema = z.discriminatedUnion("success", [
   z.object({
     success: z.literal(true),
-    data: customerProfileSchema,
+    // data: customerProfileSchema,
     message: z.string(),
     error: z.undefined(),
   }),
   z.object({
     success: z.literal(false),
-    data: z.undefined(),
+    // data: z.undefined(),
     message: z.undefined(),
     error: z.string(),
   }),
