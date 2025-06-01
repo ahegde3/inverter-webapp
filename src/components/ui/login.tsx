@@ -13,75 +13,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LoginResponseSchema } from "@/lib/schema";
 
 interface LoginPageProps {
   onForgotPasswordClick: () => void;
 }
 
-// Login API response interface
-interface LoginResponse {
-  success: boolean;
-  data?: {
-    user: {
-      id: string;
-      username: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      role: string;
-    };
-    token: string;
-  };
-  message: string;
-  error?: string;
-}
-
-// Encryption key - in a real app, this should be more secure and from environment variables
-// const ENCRYPTION_KEY = "AceInverterSecureKey2024";
-
-// Simple XOR encryption function
-// const encryptPassword = (password: string): string => {
-//   try {
-//     let encrypted = "";
-//     for (let i = 0; i < password.length; i++) {
-//       const passwordChar = password.charCodeAt(i);
-//       const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-//       encrypted += String.fromCharCode(passwordChar ^ keyChar);
-//     }
-//     // Base64 encode the encrypted string
-//     return btoa(encrypted);
-//   } catch (error) {
-//     console.error("Error encrypting password:", error);
-//     throw new Error("Password encryption failed");
-//   }
-// };
-
 export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const callLoginAPI = async (username: string, password: string) => {
+  const callLoginAPI = async (email: string, password: string) => {
     try {
-      // // Encrypt the password before sending
-      // const encryptedPassword = encryptPassword(password);
-
-      console.log("Sending encrypted password to backend");
-
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
+          email,
           password: password, // Send encrypted password
         }),
       });
 
-      const data: LoginResponse = await response.json();
+      const data: LoginResponseSchema = await response.json();
 
       if (data.success && data.data) {
         console.log("Login successful:", data);
@@ -89,11 +47,10 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         // Store user data and token in localStorage
         localStorage.setItem("userToken", data.data.token);
         localStorage.setItem("userData", JSON.stringify(data.data.user));
-        localStorage.setItem("customerId", data.data.user.id);
 
         return data;
       } else {
-        throw new Error(data.error || "Login failed");
+        throw new Error(!data.success ? data.error : "Login failed");
       }
     } catch (error) {
       console.error("Error calling login API:", error);
@@ -108,15 +65,15 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
 
     try {
       // Validate input fields
-      if (!username || !password) {
+      if (!email || !password) {
         throw new Error("Please fill in all fields");
       }
 
-      console.log("Login attempt with username:", username);
+      console.log("Login attempt with username:", email);
       console.log("Password will be encrypted before sending");
 
       // Call the login API with encrypted password
-      const loginResponse = await callLoginAPI(username, password);
+      const loginResponse = await callLoginAPI(email, password);
 
       console.log("Login API response:", loginResponse);
 
@@ -156,8 +113,8 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
                 id="username"
                 type="text"
                 placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />

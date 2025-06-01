@@ -5,6 +5,7 @@ import { Component as ChartAreaInteractive } from "@/components/chart-area-inter
 // import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { User } from "@/lib/schema";
 
 // import data from "./data.json";
 
@@ -98,7 +99,13 @@ export default function Dashboard() {
     const loadDashboardData = async () => {
       try {
         // Check if we have stored customer ID from login
-        const storedCustomerId = localStorage.getItem("customerId");
+        const userData: User | null = localStorage.getItem("userData")
+          ? JSON.parse(localStorage.getItem("userData")!)
+          : null;
+
+        if (!userData) return;
+
+        const storedCustomerId = userData.userId;
 
         // If no stored customer ID, use default for demo
         const customerId = storedCustomerId || "123";
