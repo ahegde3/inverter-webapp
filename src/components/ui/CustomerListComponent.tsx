@@ -17,58 +17,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-interface CustomerData {
-  firstName: string;
-  lastName: string;
-  emailId: string;
-  address: string;
-}
-
-const customerDataList: CustomerData[] = [
-  {
-    firstName: "John",
-    lastName: "Doe",
-    emailId: "john.doe@example.com",
-    address: "123 Main St, New York, NY 10001",
-  },
-  {
-    firstName: "Jane",
-    lastName: "Smith",
-    emailId: "jane.smith@example.com",
-    address: "456 Oak Ave, Los Angeles, CA 90210",
-  },
-  {
-    firstName: "Mike",
-    lastName: "Johnson",
-    emailId: "mike.johnson@example.com",
-    address: "789 Pine Rd, Chicago, IL 60601",
-  },
-  {
-    firstName: "Sarah",
-    lastName: "Williams",
-    emailId: "sarah.williams@example.com",
-    address: "321 Elm St, Houston, TX 77001",
-  },
-  {
-    firstName: "David",
-    lastName: "Brown",
-    emailId: "david.brown@example.com",
-    address: "654 Maple Dr, Phoenix, AZ 85001",
-  },
-  {
-    firstName: "Emily",
-    lastName: "Davis",
-    emailId: "emily.davis@example.com",
-    address: "987 Cedar Ln, Philadelphia, PA 19101",
-  },
-  {
-    firstName: "Robert",
-    lastName: "Wilson",
-    emailId: "robert.wilson@example.com",
-    address: "147 Birch St, San Antonio, TX 78201",
-  },
-];
+import { useCustomers } from "@/hooks/use-customers";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import type { CustomerData } from "@/types/customer";
 
 export default function CustomerListComponent() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,20 +33,25 @@ export default function CustomerListComponent() {
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const filteredCustomers = customerDataList.filter((customer) =>
-    `${customer.firstName} ${customer.lastName}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
-  );
+  // Debounce search query to avoid too many API calls
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+
+  const { customers, deleteCustomer, loading, error, refetch } = useCustomers({
+    search: debouncedSearch || undefined,
+    limit: 50, // Fetch more customers for better UX
+  });
 
   const handleCustomerClick = (customer: CustomerData | void) => {
     let canEdit: boolean = false;
     if (!customer) {
       customer = {
+        userId: "",
         firstName: "",
         lastName: "",
         emailId: "",
         address: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       canEdit = true;
     }
@@ -113,8 +69,9 @@ export default function CustomerListComponent() {
     if (editableCustomer) {
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
-      // Here you would typically save to your backend
-      console.log("Saving customer data:", editableCustomer);
+
+      // Refetch data to get updated list
+      refetch();
     }
   };
 
@@ -130,6 +87,12 @@ export default function CustomerListComponent() {
         [field]: value,
       });
     }
+  };
+
+  const handleCustomerDelete = async (customerId: string): Promise<void> => {
+    if (!customerId) return;
+    await deleteCustomer(customerId);
+    setIsModalOpen(false);
   };
 
   return (
@@ -188,9 +151,18 @@ export default function CustomerListComponent() {
             <h4 className="mb-4 text-sm font-medium leading-none">
               Customer List
             </h4>
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer: CustomerData, idx) => (
-                <div key={idx}>
+            {loading ? (
+              <div className="text-sm text-gray-500">Loading customers...</div>
+            ) : error ? (
+              <div className="text-sm text-red-500 space-y-2">
+                <p>Error loading customers: {error}</p>
+                <Button variant="outline" size="sm" onClick={refetch}>
+                  Retry
+                </Button>
+              </div>
+            ) : customers.length > 0 ? (
+              customers.map((customer: CustomerData) => (
+                <div key={customer.userId}>
                   <div className="flex items-center justify-between">
                     <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
                     <RxExternalLink
@@ -317,7 +289,14 @@ export default function CustomerListComponent() {
                     <Button variant="outline" onClick={handleEditClick}>
                       Edit
                     </Button>
-                    <Button variant="destructive">Delete</Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() =>
+                        handleCustomerDelete(selectedCustomer.userId)
+                      }
+                    >
+                      Delete
+                    </Button>
                   </>
                 )}
               </div>

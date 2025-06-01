@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HoverCard,
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
 export default function ProfileIcon() {
+  const router = useRouter();
   function handleLogout() {
+    router.push("/");
     // Implement logout functionality here
     console.log("Logging out...");
   }
