@@ -19,7 +19,7 @@ const Navbar = () => {
           className="text-xl md:text-3xl font-bold"
           style={{ color: "var(--primary)" }}
         >
-          VKInverter
+          VK Inverter
         </h1>
       </Link>
       <div className="flex items-center gap-2 md:gap-4">
