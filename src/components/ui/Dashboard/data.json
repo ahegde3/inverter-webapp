@@ -1,38 +1,132 @@
-[
-  {
-    "id": 1,
-    "header": "Project Overview",
-    "type": "Document",
-    "status": "Done",
-    "target": "10",
-    "limit": "20",
-    "reviewer": "John Doe"
-  },
-  {
-    "id": 2,
-    "header": "Technical Specifications",
-    "type": "Technical",
-    "status": "In Process",
-    "target": "15",
-    "limit": "25",
-    "reviewer": "Jane Smith"
-  },
-  {
-    "id": 3,
-    "header": "System Requirements",
-    "type": "Technical",
-    "status": "Done",
-    "target": "12",
-    "limit": "18",
-    "reviewer": "John Doe"
-  },
-  {
-    "id": 4,
-    "header": "Implementation Plan",
-    "type": "Document",
-    "status": "In Process",
-    "target": "8",
-    "limit": "15",
-    "reviewer": "Jane Smith"
-  }
-]
+{
+  "projects": [
+    {
+      "id": 1,
+      "header": "Project Overview",
+      "type": "Document",
+      "status": "Done",
+      "target": "10",
+      "limit": "20",
+      "reviewer": "John Doe"
+    },
+    {
+      "id": 2,
+      "header": "Technical Specifications",
+      "type": "Technical",
+      "status": "In Process",
+      "target": "15",
+      "limit": "25",
+      "reviewer": "Jane Smith"
+    },
+    {
+      "id": 3,
+      "header": "System Requirements",
+      "type": "Technical",
+      "status": "Done",
+      "target": "12",
+      "limit": "18",
+      "reviewer": "John Doe"
+    },
+    {
+      "id": 4,
+      "header": "Implementation Plan",
+      "type": "Document",
+      "status": "In Process",
+      "target": "8",
+      "limit": "15",
+      "reviewer": "Jane Smith"
+    }
+  ],
+  "solarCustomers": [
+    {
+      "customerId": "CUST-2024-001",
+      "customerName": "John Solar Tech",
+      "location": "California, USA",
+      "systemCapacity": "10.5 kW",
+      "installationDate": "2023-06-15",
+      "dailyData": [
+        {
+          "date": "2024-01-15",
+          "day": "Monday",
+          "currentGeneration": 42.8,
+          "photovoltaicOutput": 45.2,
+          "transferredToGrid": 38.5,
+          "solarRevenue": 1035.50,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-16",
+          "day": "Tuesday",
+          "currentGeneration": 39.6,
+          "photovoltaicOutput": 41.8,
+          "transferredToGrid": 35.2,
+          "solarRevenue": 946.60,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-17",
+          "day": "Wednesday",
+          "currentGeneration": 46.3,
+          "photovoltaicOutput": 48.7,
+          "transferredToGrid": 41.9,
+          "solarRevenue": 1125.80,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-18",
+          "day": "Thursday",
+          "currentGeneration": 44.1,
+          "photovoltaicOutput": 46.5,
+          "transferredToGrid": 39.8,
+          "solarRevenue": 1069.70,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-19",
+          "day": "Friday",
+          "currentGeneration": 41.7,
+          "photovoltaicOutput": 43.9,
+          "transferredToGrid": 37.6,
+          "solarRevenue": 1010.80,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-20",
+          "day": "Saturday",
+          "currentGeneration": 38.2,
+          "photovoltaicOutput": 40.1,
+          "transferredToGrid": 34.5,
+          "solarRevenue": 926.40,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        },
+        {
+          "date": "2024-01-21",
+          "day": "Sunday",
+          "currentGeneration": 35.9,
+          "photovoltaicOutput": 37.8,
+          "transferredToGrid": 32.1,
+          "solarRevenue": 862.90,
+          "unit": "kWh",
+          "revenueUnit": "INR"
+        }
+      ],
+      "weeklyTotals": {
+        "totalCurrentGeneration": 288.6,
+        "totalPhotovoltaicOutput": 304.0,
+        "totalTransferredToGrid": 259.6,
+        "totalSolarRevenue": 6977.70,
+        "unit": "kWh",
+        "revenueUnit": "INR"
+      },
+      "systemStatus": "Operational",
+      "lastUpdated": "2024-01-21T18:30:00Z",
+      "performanceRating": "Excellent"
+    }
+  ]
+}

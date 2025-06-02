@@ -190,7 +190,7 @@ export default function Dashboard() {
                   <ChartAreaInteractive />
                 </div>
                 <div className="w-full overflow-x-auto">
-                  <DataTable data={data} />
+                  <DataTable data={data.projects} />
                 </div>
               </div>
               {/* <DataTable data={data} /> */}

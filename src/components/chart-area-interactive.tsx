@@ -18,109 +18,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import data from "@/components/ui/Dashboard/data.json";
 
 export const description = "An interactive area chart";
 
-const chartData = [
-  { date: "2024-04-01", loadGeneration: 222, loadConsumption: 150 },
-  { date: "2024-04-02", loadGeneration: 97, loadConsumption: 180 },
-  { date: "2024-04-03", loadGeneration: 167, loadConsumption: 120 },
-  { date: "2024-04-04", loadGeneration: 242, loadConsumption: 260 },
-  { date: "2024-04-05", loadGeneration: 373, loadConsumption: 290 },
-  { date: "2024-04-06", loadGeneration: 301, loadConsumption: 340 },
-  { date: "2024-04-07", loadGeneration: 245, loadConsumption: 180 },
-  { date: "2024-04-08", loadGeneration: 409, loadConsumption: 320 },
-  { date: "2024-04-09", loadGeneration: 59, loadConsumption: 110 },
-  { date: "2024-04-10", loadGeneration: 261, loadConsumption: 190 },
-  { date: "2024-04-11", loadGeneration: 327, loadConsumption: 350 },
-  { date: "2024-04-12", loadGeneration: 292, loadConsumption: 210 },
-  { date: "2024-04-13", loadGeneration: 342, loadConsumption: 380 },
-  { date: "2024-04-14", loadGeneration: 137, loadConsumption: 220 },
-  { date: "2024-04-15", loadGeneration: 120, loadConsumption: 170 },
-  { date: "2024-04-16", loadGeneration: 138, loadConsumption: 190 },
-  { date: "2024-04-17", loadGeneration: 446, loadConsumption: 360 },
-  { date: "2024-04-18", loadGeneration: 364, loadConsumption: 410 },
-  { date: "2024-04-19", loadGeneration: 243, loadConsumption: 180 },
-  { date: "2024-04-20", loadGeneration: 89, loadConsumption: 150 },
-  { date: "2024-04-21", loadGeneration: 137, loadConsumption: 200 },
-  { date: "2024-04-22", loadGeneration: 224, loadConsumption: 170 },
-  { date: "2024-04-23", loadGeneration: 138, loadConsumption: 230 },
-  { date: "2024-04-24", loadGeneration: 387, loadConsumption: 290 },
-  { date: "2024-04-25", loadGeneration: 215, loadConsumption: 250 },
-  { date: "2024-04-26", loadGeneration: 75, loadConsumption: 130 },
-  { date: "2024-04-27", loadGeneration: 383, loadConsumption: 420 },
-  { date: "2024-04-28", loadGeneration: 122, loadConsumption: 180 },
-  { date: "2024-04-29", loadGeneration: 315, loadConsumption: 240 },
-  { date: "2024-04-30", loadGeneration: 454, loadConsumption: 380 },
-  { date: "2024-05-01", loadGeneration: 165, loadConsumption: 220 },
-  { date: "2024-05-02", loadGeneration: 293, loadConsumption: 310 },
-  { date: "2024-05-03", loadGeneration: 247, loadConsumption: 190 },
-  { date: "2024-05-04", loadGeneration: 385, loadConsumption: 420 },
-  { date: "2024-05-05", loadGeneration: 481, loadConsumption: 390 },
-  { date: "2024-05-06", loadGeneration: 498, loadConsumption: 520 },
-  { date: "2024-05-07", loadGeneration: 388, loadConsumption: 300 },
-  { date: "2024-05-08", loadGeneration: 149, loadConsumption: 210 },
-  { date: "2024-05-09", loadGeneration: 227, loadConsumption: 180 },
-  { date: "2024-05-10", loadGeneration: 293, loadConsumption: 330 },
-  { date: "2024-05-11", loadGeneration: 335, loadConsumption: 270 },
-  { date: "2024-05-12", loadGeneration: 197, loadConsumption: 240 },
-  { date: "2024-05-13", loadGeneration: 197, loadConsumption: 160 },
-  { date: "2024-05-14", loadGeneration: 448, loadConsumption: 490 },
-  { date: "2024-05-15", loadGeneration: 473, loadConsumption: 380 },
-  { date: "2024-05-16", loadGeneration: 338, loadConsumption: 400 },
-  { date: "2024-05-17", loadGeneration: 499, loadConsumption: 420 },
-  { date: "2024-05-18", loadGeneration: 315, loadConsumption: 350 },
-  { date: "2024-05-19", loadGeneration: 235, loadConsumption: 180 },
-  { date: "2024-05-20", loadGeneration: 177, loadConsumption: 230 },
-  { date: "2024-05-21", loadGeneration: 82, loadConsumption: 140 },
-  { date: "2024-05-22", loadGeneration: 81, loadConsumption: 120 },
-  { date: "2024-05-23", loadGeneration: 252, loadConsumption: 290 },
-  { date: "2024-05-24", loadGeneration: 294, loadConsumption: 220 },
-  { date: "2024-05-25", loadGeneration: 201, loadConsumption: 250 },
-  { date: "2024-05-26", loadGeneration: 213, loadConsumption: 170 },
-  { date: "2024-05-27", loadGeneration: 420, loadConsumption: 460 },
-  { date: "2024-05-28", loadGeneration: 233, loadConsumption: 190 },
-  { date: "2024-05-29", loadGeneration: 78, loadConsumption: 130 },
-  { date: "2024-05-30", loadGeneration: 340, loadConsumption: 280 },
-  { date: "2024-05-31", loadGeneration: 178, loadConsumption: 230 },
-  { date: "2024-06-01", loadGeneration: 178, loadConsumption: 200 },
-  { date: "2024-06-02", loadGeneration: 470, loadConsumption: 410 },
-  { date: "2024-06-03", loadGeneration: 103, loadConsumption: 160 },
-  { date: "2024-06-04", loadGeneration: 439, loadConsumption: 380 },
-  { date: "2024-06-05", loadGeneration: 88, loadConsumption: 140 },
-  { date: "2024-06-06", loadGeneration: 294, loadConsumption: 250 },
-  { date: "2024-06-07", loadGeneration: 323, loadConsumption: 370 },
-  { date: "2024-06-08", loadGeneration: 385, loadConsumption: 320 },
-  { date: "2024-06-09", loadGeneration: 438, loadConsumption: 480 },
-  { date: "2024-06-10", loadGeneration: 155, loadConsumption: 200 },
-  { date: "2024-06-11", loadGeneration: 92, loadConsumption: 150 },
-  { date: "2024-06-12", loadGeneration: 492, loadConsumption: 420 },
-  { date: "2024-06-13", loadGeneration: 81, loadConsumption: 130 },
-  { date: "2024-06-14", loadGeneration: 426, loadConsumption: 380 },
-  { date: "2024-06-15", loadGeneration: 307, loadConsumption: 350 },
-  { date: "2024-06-16", loadGeneration: 371, loadConsumption: 310 },
-  { date: "2024-06-17", loadGeneration: 475, loadConsumption: 520 },
-  { date: "2024-06-18", loadGeneration: 107, loadConsumption: 170 },
-  { date: "2024-06-19", loadGeneration: 341, loadConsumption: 290 },
-  { date: "2024-06-20", loadGeneration: 408, loadConsumption: 450 },
-  { date: "2024-06-21", loadGeneration: 169, loadConsumption: 210 },
-  { date: "2024-06-22", loadGeneration: 317, loadConsumption: 270 },
-  { date: "2024-06-23", loadGeneration: 480, loadConsumption: 530 },
-  { date: "2024-06-24", loadGeneration: 132, loadConsumption: 180 },
-  { date: "2024-06-25", loadGeneration: 141, loadConsumption: 190 },
-  { date: "2024-06-26", loadGeneration: 434, loadConsumption: 380 },
-  { date: "2024-06-27", loadGeneration: 448, loadConsumption: 490 },
-  { date: "2024-06-28", loadGeneration: 149, loadConsumption: 200 },
-  { date: "2024-06-29", loadGeneration: 103, loadConsumption: 160 },
-  { date: "2024-06-30", loadGeneration: 446, loadConsumption: 400 },
-];
+// Generate chart data from JSON
+const generateChartData = () => {
+  const solarCustomer = data.solarCustomers[0];
+  return solarCustomer.dailyData.map((day) => ({
+    date: day.date,
+    currentGeneration: day.currentGeneration,
+    loadConsumption: parseFloat((day.photovoltaicOutput - day.transferredToGrid).toFixed(1)),
+  }));
+};
+
+const chartData = generateChartData();
 
 const chartConfig = {
   load: {
     label: "Load",
   },
-  loadGeneration: {
-    label: "Load Generation",
+  currentGeneration: {
+    label: "Current Generation",
     color: "#2563eb",
   },
   loadConsumption: {
@@ -139,7 +58,7 @@ export function Component() {
 
     return chartData.filter((item) => {
       const date = new Date(item.date);
-      const referenceDate = new Date("2024-06-30");
+      const referenceDate = new Date("2024-01-21"); // Updated to match our data range
       let daysToSubtract = 90;
       if (timeRange === "30d") {
         daysToSubtract = 30;
@@ -156,7 +75,7 @@ export function Component() {
     <Card>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
-          <CardTitle>Load Generation vs Consumption</CardTitle>
+          <CardTitle>Current Generation vs Load Consumption</CardTitle>
           {/* <CardDescription>Showing total load for the last 3 months</CardDescription> */}
         </div>
         <div className="flex items-center gap-2">
@@ -227,9 +146,9 @@ export function Component() {
                     });
                   }}
                   formatter={(value, name) => [
-                    `${value} MW`,
-                    name === "loadGeneration"
-                      ? "Load Generation"
+                    `${value} kWh`,
+                    name === "currentGeneration"
+                      ? "Current Generation"
                       : "Load Consumption",
                   ]}
                   indicator="dot"
@@ -246,10 +165,10 @@ export function Component() {
               stackId="a"
             />
             <Area
-              dataKey="loadGeneration"
+              dataKey="currentGeneration"
               type="linear"
               fill="transparent"
-              stroke="var(--color-loadGeneration)"
+              stroke="var(--color-currentGeneration)"
               strokeWidth={3}
               stackId="a"
             />
