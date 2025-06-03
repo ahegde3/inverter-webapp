@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encryptPassword, findUserByEmail } from "@/lib/services/user.service";
-import { loginRequestSchema, type LoginResponse } from "@/lib/schemas/auth";
+import { loginRequestSchema, type LoginResponse } from "@/lib/schema/auth";
 import { userSchema } from "@/lib/schema";
 
 // Configure route for static export
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const encryptedPassword: string = encryptPassword(password);
 
     // Find user
-    const user = await findUserByEmail({ email });
+    const user = await findUserByEmail({ emailId: email });
 
     if (!user) {
       return NextResponse.json(

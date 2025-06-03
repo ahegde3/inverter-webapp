@@ -10,13 +10,11 @@ import {
   type CustomerDeleteResponse,
   type CustomerUpdateResponse,
 } from "@/lib/schema";
-import { getUsersByRole } from "@/lib/services/user.service";
 import {
-  UpdateCommand,
-  DeleteCommand,
-  ScanCommand,
-} from "@aws-sdk/lib-dynamodb";
-import { ddb } from "@/lib/dynamo";
+  getUsersByRole,
+  deleteUserById,
+  updateUserById,
+} from "@/lib/services/user.service";
 
 export async function GET(): Promise<NextResponse<CustomerApiResponse>> {
   try {
@@ -71,100 +69,7 @@ export async function PATCH(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    const { emailId, ...updateData } = validationResult.data;
-
-    if (!emailId) {
-      const errorResponse = {
-        success: false,
-        data: undefined,
-        message: undefined,
-        error: "userId is required for updating a customer",
-      };
-
-      const validatedErrorResponse =
-        customerUpdateResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 400 });
-    }
-
-    // First find the customer using emailId filter
-    console.log("Searching for customer with emailId:", emailId);
-    const scanCommand = new ScanCommand({
-      TableName: "Inverter-db",
-      FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
-      ExpressionAttributeValues: {
-        ":pk": `USER#${emailId}`,
-        ":sk": "PROFILE",
-      },
-    });
-
-    const scanResult = await ddb.send(scanCommand);
-    console.log("Scan result:", scanResult);
-
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      const errorResponse = {
-        success: false,
-        data: undefined,
-        message: undefined,
-        error: `Customer with emailId ${emailId} not found.`,
-      };
-
-      const validatedErrorResponse =
-        customerUpdateResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 404 });
-    }
-
-    // const customer = scanResult.Items[0];
-
-    // Build update expression dynamically based on provided fields
-    const updateExpressions: string[] = [];
-    const expressionAttributeNames: Record<string, string> = {};
-    const expressionAttributeValues: Record<string, string | number> = {};
-
-    // Map request fields to database fields
-    const fieldMappings: Record<string, string> = {
-      firstName: "firstName",
-      lastName: "lastName",
-      emailId: "email",
-      address: "address",
-    };
-
-    Object.entries(updateData).forEach(([key, value]) => {
-      if (value !== undefined) {
-        const dbField = fieldMappings[key];
-        if (dbField) {
-          const attrName = `#${dbField}`;
-          const attrValue = `:${dbField}`;
-
-          updateExpressions.push(`${attrName} = ${attrValue}`);
-          expressionAttributeNames[attrName] = dbField;
-          expressionAttributeValues[attrValue] = value;
-        }
-      }
-    });
-
-    const updateExpression = `SET ${updateExpressions.join(", ")}`;
-
-    const updateCommand = new UpdateCommand({
-      TableName: "Inverter-db",
-      Key: {
-        PK: `USER#${emailId}`,
-        SK: "PROFILE",
-      },
-      UpdateExpression: updateExpression,
-      ExpressionAttributeNames: expressionAttributeNames,
-      ExpressionAttributeValues: expressionAttributeValues,
-    });
-
-    const updateResult = await ddb.send(updateCommand);
-    console.log("Update result:", updateResult);
-
-    const response: CustomerUpdateResponse = {
-      success: true,
-      message: "Customer updated successfully",
-      error: undefined,
-    };
-
-    // Validate response with Zod schema
+    const response = await updateUserById(validationResult.data);
     const validatedResponse = customerUpdateResponseSchema.parse(response);
 
     return NextResponse.json(validatedResponse);
@@ -204,56 +109,7 @@ export async function DELETE(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    // First find the customer using emailId filter
-    console.log("Searching for customer with customerId:", customerId);
-    const scanCommand = new ScanCommand({
-      TableName: "Inverter-db",
-      FilterExpression:
-        "begins_with(PK, :pk) AND SK = :sk AND #userId = :userId",
-      ExpressionAttributeValues: {
-        ":pk": "USER#",
-        ":sk": "PROFILE",
-        ":userId": customerId,
-      },
-      ExpressionAttributeNames: {
-        "#userId": "userId",
-      },
-    });
-
-    const scanResult = await ddb.send(scanCommand);
-    console.log("Scan result:", scanResult);
-
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      const errorResponse = {
-        success: false,
-        user_id: undefined,
-        message: undefined,
-        error: `Customer with customerId ${customerId} not found.`,
-      };
-
-      const validatedErrorResponse =
-        customerDeleteResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 404 });
-    }
-
-    const emailId = scanResult.Items[0].emailId;
-    const deleteCommand = new DeleteCommand({
-      TableName: "Inverter-db",
-      Key: {
-        PK: `USER#${emailId}`,
-        SK: "PROFILE",
-      },
-    });
-
-    const deleteResult = await ddb.send(deleteCommand);
-    console.log("Delete result:", deleteResult);
-
-    const response: CustomerDeleteResponse = {
-      success: true,
-      user_id: emailId,
-      message: "Customer deleted successfully",
-      error: undefined,
-    };
+    const response = await deleteUserById(customerId);
 
     // Validate response with Zod schema
     const validatedResponse = customerDeleteResponseSchema.parse(response);
