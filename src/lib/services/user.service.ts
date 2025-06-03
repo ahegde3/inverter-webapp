@@ -1,13 +1,13 @@
 import {
   PutCommand,
-  QueryCommand,
   ScanCommand,
   DeleteCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
 import { type UserRegistrationInput } from "@/types/auth";
 import { v4 as uuidv4 } from "uuid";
-import { User, userSchema } from "@/lib/schema";
+import { User, userSchema, CustomerUpdate } from "@/lib/schema";
 
 const TABLE_NAME = "Inverter-db";
 // Encryption key - should match the frontend key
@@ -26,7 +26,7 @@ export async function createUser(userData: UserRegistrationInput) {
     const userId = uuidv4();
 
     const user = {
-      PK: `USER#${userData.emailId}`,
+      PK: `USER#${userId}`,
       SK: "PROFILE",
       userId,
       firstName: userData.firstName,
@@ -66,24 +66,28 @@ export async function createUser(userData: UserRegistrationInput) {
 }
 
 export async function findUserByEmail({
-  email,
+  emailId,
 }: {
-  email: string;
+  emailId: string;
 }): Promise<User | null> {
-  if (!email) return null;
+  if (!emailId) return null;
 
   const params = {
     TableName: TABLE_NAME,
-    KeyConditionExpression: "PK = :pk AND SK = :sk",
+    FilterExpression:
+      "begins_with(PK, :pk) AND SK = :sk AND #emailId = :emailId",
     ExpressionAttributeValues: {
-      ":pk": `USER#${email}`,
+      ":pk": `USER#`,
       ":sk": "PROFILE",
+      ":emailId": emailId,
     },
-    Limit: 1,
+    ExpressionAttributeNames: {
+      "#emailId": "emailId",
+    },
   };
 
-  const result = await ddb.send(new QueryCommand(params));
-
+  const result = await ddb.send(new ScanCommand(params));
+  console.log(result);
   if (!result.Items || result.Items.length === 0) return null;
 
   // Validate the DynamoDB response against our schema
@@ -200,3 +204,78 @@ export const deleteUserById = async (customerId: string) => {
     throw new UserServiceError("Failed to delete user");
   }
 };
+
+export async function updateUserById(userData: CustomerUpdate): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> {
+  try {
+    // Build update expression dynamically based on provided fields
+    const updateExpressions: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, string> = {};
+
+    // Only include fields that are provided and not undefined
+    Object.entries(userData).forEach(([key, value]) => {
+      if (value !== undefined && key !== "emailId") {
+        const attrName = `#${key}`;
+        const attrValue = `:${key}`;
+
+        updateExpressions.push(`${attrName} = ${attrValue}`);
+        expressionAttributeNames[attrName] = key;
+        expressionAttributeValues[attrValue] = value;
+      }
+    });
+
+    if (updateExpressions.length === 0) {
+      return {
+        success: false,
+        error: "No fields to update were provided",
+      };
+    }
+
+    const updateExpression = `SET ${updateExpressions.join(", ")}`;
+
+    const updateCommand = new UpdateCommand({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: `USER#${userData.userId}`,
+        SK: "PROFILE",
+      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      // Add condition to ensure item exists
+      ConditionExpression: "attribute_exists(PK)",
+      ReturnValues: "ALL_NEW",
+    });
+
+    await ddb.send(updateCommand);
+
+    return {
+      success: true,
+      message: "User updated successfully",
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === "ConditionalCheckFailedException") {
+        return {
+          success: false,
+          error: `User with email ${userData.emailId} not found`,
+        };
+      }
+
+      console.error("Error updating user:", error);
+      return {
+        success: false,
+        error: "Failed to update user",
+      };
+    }
+
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
+  }
+}
