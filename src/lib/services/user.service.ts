@@ -1,4 +1,9 @@
-import { PutCommand, QueryCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  PutCommand,
+  QueryCommand,
+  ScanCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
 import { type UserRegistrationInput } from "@/types/auth";
 import { v4 as uuidv4 } from "uuid";
@@ -95,7 +100,7 @@ export const getUsersByRole = async (roleName: string): Promise<User[]> => {
   if (!roleName) throw new Error("Invalid params");
   try {
     const params = {
-      TableName: "Inverter-db",
+      TableName: TABLE_NAME,
       FilterExpression: "begins_with(PK, :pk) AND SK = :sk AND #role = :role",
       ExpressionAttributeValues: {
         ":pk": "USER#",
@@ -144,5 +149,54 @@ export const encryptPassword = (password: string): string => {
   } catch (error) {
     console.error("Error encrypting password:", error);
     throw new Error("Password encryption failed");
+  }
+};
+
+export const deleteUserById = async (customerId: string) => {
+  try {
+    const deleteCommand = new DeleteCommand({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: `USER#${customerId}`,
+        SK: "PROFILE",
+      },
+      ConditionExpression: "userId = :userId",
+      ExpressionAttributeValues: {
+        ":userId": customerId,
+      },
+      ReturnValues: "ALL_OLD",
+    });
+
+    const result = await ddb.send(deleteCommand);
+
+    if (!result.Attributes) {
+      return {
+        success: false,
+        user_id: undefined,
+        message: undefined,
+        error: `Customer with customerId ${customerId} not found.`,
+      };
+    }
+
+    return {
+      success: true,
+      user_id: customerId,
+      message: "Customer deleted successfully",
+      error: undefined,
+    };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (
+      error instanceof Error &&
+      error.name === "ConditionalCheckFailedException"
+    ) {
+      return {
+        success: false,
+        user_id: undefined,
+        message: undefined,
+        error: `Customer with customerId ${customerId} not found or has been modified.`,
+      };
+    }
+    throw new UserServiceError("Failed to delete user");
   }
 };

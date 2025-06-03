@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { encryptPassword, findUserByEmail } from "@/lib/services/user.service";
-import { loginRequestSchema, type LoginResponse } from "@/lib/schemas/auth";
+import { loginRequestSchema, type LoginResponse } from "@/lib/schema/auth";
 import { userSchema } from "@/lib/schema";
 
 // Configure route for static export

@@ -10,10 +10,9 @@ import {
   type CustomerDeleteResponse,
   type CustomerUpdateResponse,
 } from "@/lib/schema";
-import { getUsersByRole } from "@/lib/services/user.service";
+import { getUsersByRole, deleteUserById } from "@/lib/services/user.service";
 import {
   UpdateCommand,
-  DeleteCommand,
   ScanCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
@@ -204,56 +203,7 @@ export async function DELETE(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    // First find the customer using emailId filter
-    console.log("Searching for customer with customerId:", customerId);
-    const scanCommand = new ScanCommand({
-      TableName: "Inverter-db",
-      FilterExpression:
-        "begins_with(PK, :pk) AND SK = :sk AND #userId = :userId",
-      ExpressionAttributeValues: {
-        ":pk": "USER#",
-        ":sk": "PROFILE",
-        ":userId": customerId,
-      },
-      ExpressionAttributeNames: {
-        "#userId": "userId",
-      },
-    });
-
-    const scanResult = await ddb.send(scanCommand);
-    console.log("Scan result:", scanResult);
-
-    if (!scanResult.Items || scanResult.Items.length === 0) {
-      const errorResponse = {
-        success: false,
-        user_id: undefined,
-        message: undefined,
-        error: `Customer with customerId ${customerId} not found.`,
-      };
-
-      const validatedErrorResponse =
-        customerDeleteResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 404 });
-    }
-
-    const emailId = scanResult.Items[0].emailId;
-    const deleteCommand = new DeleteCommand({
-      TableName: "Inverter-db",
-      Key: {
-        PK: `USER#${emailId}`,
-        SK: "PROFILE",
-      },
-    });
-
-    const deleteResult = await ddb.send(deleteCommand);
-    console.log("Delete result:", deleteResult);
-
-    const response: CustomerDeleteResponse = {
-      success: true,
-      user_id: emailId,
-      message: "Customer deleted successfully",
-      error: undefined,
-    };
+    const response = await deleteUserById(customerId);
 
     // Validate response with Zod schema
     const validatedResponse = customerDeleteResponseSchema.parse(response);
