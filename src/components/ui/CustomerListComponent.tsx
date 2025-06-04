@@ -21,7 +21,10 @@ import { useCustomers } from "@/hooks/use-customers";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CustomerData } from "@/types/customer";
 
-export default function CustomerListComponent() {
+export default function CustomerListComponent({
+  selectedCustomerDetail,
+  setSelectedCustomerDetail,
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -47,6 +50,8 @@ export default function CustomerListComponent() {
     refetch,
   } = useCustomers({
     search: debouncedSearch || undefined,
+    selectedCustomerDetail,
+    setSelectedCustomerDetail,
     limit: 50, // Fetch more customers for better UX
   });
 
@@ -78,9 +83,8 @@ export default function CustomerListComponent() {
   const handleSaveClick = () => {
     if (editableCustomer) {
       if (isCustomerAddition) {
-        addNewCustomer({...editableCustomer,role:"CUSTOMER"});
-      }
-      else editCustomerData(editableCustomer);
+        addNewCustomer({ ...editableCustomer, role: "CUSTOMER" });
+      } else editCustomerData(editableCustomer);
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
       // Refetch data to get updated list

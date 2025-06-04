@@ -110,9 +110,11 @@ export default function Dashboard() {
 
         // If no stored customer ID, use default for demo
         const customerId = storedCustomerId || "123";
+        const name = userData.firstName + " " + userData.lastName;
 
         console.log("Loading dashboard for customer:", customerId);
         await callDashboardAPI(customerId);
+        setUserName(name);
       } catch (error) {
         console.error("Failed to load dashboard:", error);
       }
@@ -171,14 +173,17 @@ export default function Dashboard() {
               <h1 className="text-lg md:text-xl font-semibold">SolarSync</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              John Doe
-            </span>
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-medium">JD</span>
+          {userName && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {userName}
+              </span>
+
+              {/* <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium">JD</span>
+              </div> */}
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col">
