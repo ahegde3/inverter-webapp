@@ -48,6 +48,7 @@ export default function Dashboard() {
     error: null,
     customerId: null,
   });
+  const [userName, setUserName] = useState<string>();
 
   const callDashboardAPI = async (customerId: string) => {
     try {
