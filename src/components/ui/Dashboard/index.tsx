@@ -7,6 +7,7 @@ import { SectionCards } from "@/components/section-cards";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import data from "./data.json";
 import { User } from "@/lib/schema";
+import type { CustomerData } from "@/types/customer";
 
 // import data from "./data.json";
 
@@ -40,14 +41,18 @@ interface DashboardState {
   error: string | null;
   customerId: string | null;
 }
+interface DashboardProps {
+  selectedCustomerDetail: CustomerData | null;
+}
 
-export default function Dashboard() {
+export default function Dashboard({ selectedCustomerDetail }: DashboardProps) {
   const [dashboardState, setDashboardState] = useState<DashboardState>({
     data: null,
     loading: true,
     error: null,
     customerId: null,
   });
+  const [userName, setUserName] = useState<string>();
 
   const callDashboardAPI = async (customerId: string) => {
     try {
@@ -98,6 +103,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Call API when Dashboard component loads
     const loadDashboardData = async () => {
+      if (!selectedCustomerDetail) return;
       try {
         // Check if we have stored customer ID from login
         const userData: User | null = localStorage.getItem("userData")
@@ -106,20 +112,22 @@ export default function Dashboard() {
 
         if (!userData) return;
 
-        const storedCustomerId = userData.userId;
+        const storedCustomerId = selectedCustomerDetail.userId;
 
         // If no stored customer ID, use default for demo
         const customerId = storedCustomerId || "123";
+        const name = userData.firstName + " " + userData.lastName;
 
         console.log("Loading dashboard for customer:", customerId);
         await callDashboardAPI(customerId);
+        setUserName(name);
       } catch (error) {
         console.error("Failed to load dashboard:", error);
       }
     };
 
     loadDashboardData();
-  }, []);
+  }, [selectedCustomerDetail]);
 
   // Loading state
   if (dashboardState.loading) {
@@ -171,14 +179,17 @@ export default function Dashboard() {
               <h1 className="text-lg md:text-xl font-semibold">SolarSync</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              John Doe
-            </span>
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <span className="text-sm font-medium">JD</span>
+          {userName && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {userName}
+              </span>
+
+              {/* <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-sm font-medium">JD</span>
+              </div> */}
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col">

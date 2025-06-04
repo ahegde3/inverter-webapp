@@ -21,7 +21,15 @@ import { useCustomers } from "@/hooks/use-customers";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CustomerData } from "@/types/customer";
 
-export default function CustomerListComponent() {
+interface CustomerListComponentProps {
+  selectedCustomerDetail: CustomerData | null;
+  setSelectedCustomerDetail: (customer: CustomerData | null) => void;
+}
+
+export default function CustomerListComponent({
+  selectedCustomerDetail,
+  setSelectedCustomerDetail,
+}: CustomerListComponentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -47,6 +55,7 @@ export default function CustomerListComponent() {
     refetch,
   } = useCustomers({
     search: debouncedSearch || undefined,
+    setSelectedCustomerDetail,
     limit: 50, // Fetch more customers for better UX
   });
 
@@ -78,9 +87,8 @@ export default function CustomerListComponent() {
   const handleSaveClick = () => {
     if (editableCustomer) {
       if (isCustomerAddition) {
-        addNewCustomer({...editableCustomer,role:"CUSTOMER"});
-      }
-      else editCustomerData(editableCustomer);
+        addNewCustomer({ ...editableCustomer, role: "CUSTOMER" });
+      } else editCustomerData(editableCustomer);
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
       // Refetch data to get updated list
@@ -182,15 +190,23 @@ export default function CustomerListComponent() {
               </div>
             ) : customers.length > 0 ? (
               customers.map((customer: CustomerData) => (
-                <div key={customer.userId}>
-                  <div className="flex items-center justify-between">
+                <div
+                  key={customer.userId}
+                  className={`group transition-colors cursor-pointer ${
+                    selectedCustomerDetail?.userId === customer.userId
+                      ? "bg-blue-50 hover:bg-blue-100"
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedCustomerDetail(customer)}
+                >
+                  <div className="flex items-center justify-between p-2">
                     <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
                     <RxExternalLink
-                      className="w-4 h-4 text-gray-600 hover:text-gray-800 cursor-pointer"
+                      className="w-4 h-4 text-gray-600 group-hover:text-gray-800 cursor-pointer"
                       onClick={() => handleCustomerClick(customer)}
                     />
                   </div>
-                  <Separator className="my-2" />
+                  <Separator className="my-0" />
                 </div>
               ))
             ) : (
