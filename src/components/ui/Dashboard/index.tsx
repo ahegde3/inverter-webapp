@@ -7,6 +7,7 @@ import { SectionCards } from "@/components/section-cards";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import data from "./data.json";
 import { User } from "@/lib/schema";
+import type { CustomerData } from "@/types/customer";
 
 // import data from "./data.json";
 
@@ -40,8 +41,11 @@ interface DashboardState {
   error: string | null;
   customerId: string | null;
 }
+interface DashboardProps {
+  selectedCustomerDetail: CustomerData | null;
+}
 
-export default function Dashboard() {
+export default function Dashboard({ selectedCustomerDetail }: DashboardProps) {
   const [dashboardState, setDashboardState] = useState<DashboardState>({
     data: null,
     loading: true,
@@ -99,6 +103,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Call API when Dashboard component loads
     const loadDashboardData = async () => {
+      if (!selectedCustomerDetail) return;
       try {
         // Check if we have stored customer ID from login
         const userData: User | null = localStorage.getItem("userData")
@@ -107,7 +112,7 @@ export default function Dashboard() {
 
         if (!userData) return;
 
-        const storedCustomerId = userData.userId;
+        const storedCustomerId = selectedCustomerDetail.userId;
 
         // If no stored customer ID, use default for demo
         const customerId = storedCustomerId || "123";
@@ -122,7 +127,7 @@ export default function Dashboard() {
     };
 
     loadDashboardData();
-  }, []);
+  }, [selectedCustomerDetail]);
 
   // Loading state
   if (dashboardState.loading) {

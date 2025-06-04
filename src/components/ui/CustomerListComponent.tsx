@@ -21,11 +21,15 @@ import { useCustomers } from "@/hooks/use-customers";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CustomerData } from "@/types/customer";
 
+interface CustomerListComponentProps {
+  selectedCustomerDetail: CustomerData | null;
+  setSelectedCustomerDetail: (customer: CustomerData | null) => void;
+}
 
 export default function CustomerListComponent({
   selectedCustomerDetail,
   setSelectedCustomerDetail,
-}) {
+}: CustomerListComponentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -51,7 +55,6 @@ export default function CustomerListComponent({
     refetch,
   } = useCustomers({
     search: debouncedSearch || undefined,
-    selectedCustomerDetail,
     setSelectedCustomerDetail,
     limit: 50, // Fetch more customers for better UX
   });
