@@ -52,11 +52,11 @@ const AlertDialogAction = ({ onClick, className, children }: { onClick?: () => v
   <Button onClick={onClick} className={className}>{children}</Button>
 );
 
-// Column configuration - Updated to match API status
+// Column configuration - Updated to match API status and dark mode
 const COLUMNS = [
-  { id: "OPEN", title: "Open", color: "bg-slate-100", mobileColor: "bg-slate-50" },
-  { id: "IN_PROGRESS", title: "In Progress", color: "bg-blue-100", mobileColor: "bg-blue-50" },
-  { id: "COMPLETED", title: "Completed", color: "bg-green-100", mobileColor: "bg-green-50" },
+  { id: "OPEN", title: "Open", color: "bg-slate-100 dark:bg-slate-800", mobileColor: "bg-slate-50 dark:bg-slate-900" },
+  { id: "IN_PROGRESS", title: "In Progress", color: "bg-blue-100 dark:bg-blue-900/30", mobileColor: "bg-blue-50 dark:bg-blue-900/20" },
+  { id: "COMPLETED", title: "Completed", color: "bg-green-100 dark:bg-green-900/30", mobileColor: "bg-green-50 dark:bg-green-900/20" },
 ] as const;
 
 export default function TicketsKanban() {
@@ -514,14 +514,26 @@ export default function TicketsKanban() {
           </Button>
           
           {/* Create New Ticket Dialog */}
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+            // Allow opening the dialog, but prevent closing from outside clicks
+            if (open) {
+              setIsCreateDialogOpen(true);
+            } else if (!isCreating) {
+              // Only allow closing through explicit button clicks when not creating
+              setIsCreateDialogOpen(false);
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="flex-1 sm:flex-none" disabled={isCreating}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Ticket
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
+            <DialogContent 
+              className="sm:max-w-[500px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto"
+              onPointerDownOutside={(e) => e.preventDefault()}
+              onEscapeKeyDown={(e) => e.preventDefault()}
+            >
               <DialogHeader>
                 <DialogTitle>Create New Ticket</DialogTitle>
                 <DialogDescription>
@@ -594,6 +606,24 @@ export default function TicketsKanban() {
               </div>
               
               <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!isCreating) {
+                      setNewTicket({ 
+                        customerId: "", 
+                        deviceId: "", 
+                        message: "",
+                        emailId: "" 
+                      });
+                      setIsCreateDialogOpen(false);
+                    }
+                  }}
+                  disabled={isCreating}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
                 <Button 
                   type="submit" 
                   onClick={createTicket} 
