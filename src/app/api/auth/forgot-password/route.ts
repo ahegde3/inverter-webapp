@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { findUserByEmail } from "@/lib/services/user.service";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 
@@ -11,11 +12,14 @@ export async function POST(request: NextRequest) {
 
   // 🔐 1. Check if user exists
   const user = await findUserByEmail(emailId); // Replace with your DB logic
+  console.log(user);
   if (!user)
     return NextResponse.json({ message: "User not found", status: 404 });
 
   // 🪙 2. Generate token
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1h" });
+  const token = jwt.sign({ userId: user.userId }, JWT_SECRET, {
+    expiresIn: "1h",
+  });
 
   // 📧 3. Send reset email
   const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
@@ -25,11 +29,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ message: "Reset link sent!", status: 200 });
 }
 
-// Simulated DB function (replace with actual implementation)
-async function findUserByEmail(email: string) {
-  // Simulate DB lookup
-  return { id: "123", email };
-}
+
 
 // Send email using nodemailer
 async function sendResetEmail(to: string, resetLink: string) {

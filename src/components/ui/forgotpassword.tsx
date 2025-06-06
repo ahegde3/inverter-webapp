@@ -50,7 +50,8 @@ export default function ForgotPasswordPage({
       // Password reset email sent successfully
       toast.success({
         title: "Reset Link Sent",
-        description: "Check your email for password reset instructions.",
+        description:
+          "Check your email for password reset instructions if user is present.",
       });
       onBackToLogin();
     } catch (error) {
