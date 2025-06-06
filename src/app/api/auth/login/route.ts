@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { encryptPassword, findUserByEmail } from "@/lib/services/user.service";
 import { loginRequestSchema, type LoginResponse } from "@/lib/schema/auth";
 import { userSchema } from "@/lib/schema";
+import { SignJWT } from "jose";
 
 // Configure route for static export
 export const dynamic = "force-static";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.SECRET_KEY || "your-secret"
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,14 +57,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token (mock for now)
-    const token = `mock_jwt_token_${user.userId}_${Date.now()}`;
+    // Generate JWT token with 1-hour expiration
+    const token = await new SignJWT({
+      userId: user.userId,
+      email: user.emailId,
+      role: user.role,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("1h")
+      .setIssuedAt()
+      .sign(JWT_SECRET);
 
     // Remove password from response using type-safe omit
     const userWithoutPassword = userSchema.omit({ password: true }).parse(user);
 
-    // Return successful response
-    return NextResponse.json({
+    // Create response with Set-Cookie header
+    const response = NextResponse.json({
       success: true,
       data: {
         user: userWithoutPassword,
@@ -67,6 +80,17 @@ export async function POST(request: NextRequest) {
       },
       message: `Welcome back, ${user.firstName}!`,
     } as LoginResponse);
+
+    // Set session cookie with 1-hour expiration
+    response.cookies.set("session-token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60, // 1 hour in seconds
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Error in login API:", error);
     return NextResponse.json(
