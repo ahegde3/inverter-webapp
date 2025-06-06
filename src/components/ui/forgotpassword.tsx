@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "@/lib/toast";
 
 interface ForgotPasswordPageProps {
   onBackToLogin: () => void;
@@ -47,6 +48,10 @@ export default function ForgotPasswordPage({
       }
 
       // Password reset email sent successfully
+      toast.success({
+        title: "Reset Link Sent",
+        description: "Check your email for password reset instructions.",
+      });
       onBackToLogin();
     } catch (error) {
       setError(
@@ -91,7 +96,7 @@ export default function ForgotPasswordPage({
             onClick={onBackToLogin}
             // disabled={isLoading}
           >
-            Forgot your password?
+            Sign in?
           </Button>
           <CardFooter className="pt-6">
             <Button type="submit" className="w-full">

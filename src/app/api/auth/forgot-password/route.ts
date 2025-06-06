@@ -6,7 +6,6 @@ const JWT_SECRET = process.env.SECRET_KEY || "your-secret";
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
 export async function POST(request: NextRequest) {
-  return;
   const body = await request.json();
   const { emailId } = body;
 
