@@ -5,23 +5,43 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, Search, User, Mail, MapPin, Calendar, Edit, Trash2 } from "lucide-react";
+import {
+  RefreshCw,
+  Search,
+  User,
+  Mail,
+  MapPin,
+  Calendar,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import type { CustomerData, CustomerApiResponse } from "@/types/customer";
+import { Dialog } from "@/components/ui/dialog";
+import CustomerInformationModal from "./CustomerInformationModal";
+import type { Device } from "@/lib/schema";
 
 export default function CustomerTable() {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
+    null
+  );
+  const [editableCustomer, setEditableCustomer] = useState<CustomerData | null>(
+    null
+  );
+  const [deviceData, setDeviceData] = useState<Device[] | null>(null);
 
   // Fetch customers from API
   const fetchCustomers = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       console.log("Fetching customers from API...");
-      
+
       const response = await fetch("/api/customer", {
         method: "GET",
         headers: {
@@ -36,15 +56,21 @@ export default function CustomerTable() {
       const result: CustomerApiResponse = await response.json();
       console.log("API Response:", result);
 
-      if (result.success && 'data' in result) {
+      if (result.success && "data" in result) {
         setCustomers(result.data || []);
-        console.log(`Loaded ${result.data?.length || 0} customers from database`);
+        console.log(
+          `Loaded ${result.data?.length || 0} customers from database`
+        );
       } else {
-        throw new Error('error' in result ? result.error : "Failed to fetch customers");
+        throw new Error(
+          "error" in result ? result.error : "Failed to fetch customers"
+        );
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
-      setError(error instanceof Error ? error.message : "Failed to fetch customers");
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch customers"
+      );
       setCustomers([]);
     } finally {
       setIsLoading(false);
@@ -57,11 +83,12 @@ export default function CustomerTable() {
   }, []);
 
   // Filter customers based on search query
-  const filteredCustomers = customers.filter(customer => 
-    customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.address.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Format date for display
@@ -73,6 +100,101 @@ export default function CustomerTable() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleEditButtonClick = (customer: CustomerData) => {
+    setSelectedCustomer(customer);
+    setEditableCustomer(customer);
+    setIsModalOpen(true);
+    setIsEditable(false);
+    getDeviceData(customer.userId);
+  };
+
+  const handleEditClick = () => {
+    setIsEditable(true);
+  };
+
+  const handleSaveClick = async () => {
+    if (!editableCustomer) return;
+
+    try {
+      const response = await fetch(`/api/customer/${editableCustomer.userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editableCustomer),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update customer");
+      }
+
+      // Update the customers list with the edited customer
+      setCustomers(
+        customers.map((c) =>
+          c.userId === editableCustomer.userId ? editableCustomer : c
+        )
+      );
+      setSelectedCustomer(editableCustomer);
+      setIsEditable(false);
+      await fetchCustomers(); // Refresh the list
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to update customer"
+      );
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditableCustomer(selectedCustomer);
+    setIsEditable(false);
+  };
+
+  const updateEditableCustomer = (field: keyof CustomerData, value: string) => {
+    if (editableCustomer) {
+      setEditableCustomer({
+        ...editableCustomer,
+        [field]: value,
+      });
+    }
+  };
+
+  const handleCustomerDelete = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/customer/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete customer");
+      }
+
+      setCustomers(customers.filter((c) => c.userId !== userId));
+      setIsModalOpen(false);
+      await fetchCustomers(); // Refresh the list
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to delete customer"
+      );
+    }
+  };
+
+  const getDeviceData = async (customerId: string) => {
+    try {
+      const response = await fetch(`/api/device?customer_id=${customerId}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch devices");
+      }
+      const data = await response.json();
+      setDeviceData(data.devices);
+    } catch (err) {
+      console.error("Error fetching devices:", err);
+      setDeviceData(null);
+    }
   };
 
   return (
@@ -89,7 +211,9 @@ export default function CustomerTable() {
           <p className="text-muted-foreground">
             Manage and view customer information
             {!isLoading && !error && (
-              <span className="ml-2 text-sm">({filteredCustomers.length} customers)</span>
+              <span className="ml-2 text-sm">
+                ({filteredCustomers.length} customers)
+              </span>
             )}
           </p>
           {error && (
@@ -107,7 +231,7 @@ export default function CustomerTable() {
             </div>
           )}
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -115,7 +239,9 @@ export default function CustomerTable() {
             disabled={isLoading}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -178,7 +304,10 @@ export default function CustomerTable() {
                 </thead>
                 <tbody>
                   {filteredCustomers.map((customer) => (
-                    <tr key={customer.userId} className="border-b hover:bg-muted/25 transition-colors">
+                    <tr
+                      key={customer.userId}
+                      className="border-b hover:bg-muted/25 transition-colors"
+                    >
                       <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -203,21 +332,34 @@ export default function CustomerTable() {
                       <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm max-w-xs truncate">{customer.address}</span>
+                          <span className="text-sm max-w-xs truncate">
+                            {customer.address}
+                          </span>
                         </div>
                       </td>
                       <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{formatDate(customer.createdAt)}</span>
+                          <span className="text-sm">
+                            {formatDate(customer.createdAt)}
+                          </span>
                         </div>
                       </td>
                       <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEditButtonClick(customer)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -226,13 +368,15 @@ export default function CustomerTable() {
                   ))}
                 </tbody>
               </table>
-              
+
               {filteredCustomers.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No customers found</p>
                   {searchQuery && (
-                    <p className="text-sm mt-1">Try adjusting your search terms</p>
+                    <p className="text-sm mt-1">
+                      Try adjusting your search terms
+                    </p>
                   )}
                 </div>
               )}
@@ -242,7 +386,10 @@ export default function CustomerTable() {
           {/* Mobile Cards */}
           <div className="md:hidden space-y-4">
             {filteredCustomers.map((customer) => (
-              <Card key={customer.userId} className="hover:shadow-md transition-shadow">
+              <Card
+                key={customer.userId}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -255,7 +402,11 @@ export default function CustomerTable() {
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -282,19 +433,35 @@ export default function CustomerTable() {
                 </CardContent>
               </Card>
             ))}
-            
+
             {filteredCustomers.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No customers found</p>
                 {searchQuery && (
-                  <p className="text-sm mt-1">Try adjusting your search terms</p>
+                  <p className="text-sm mt-1">
+                    Try adjusting your search terms
+                  </p>
                 )}
               </div>
             )}
           </div>
         </div>
       )}
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <CustomerInformationModal
+          selectedCustomer={selectedCustomer}
+          editableCustomer={editableCustomer}
+          deviceData={deviceData}
+          isEditable={true}
+          updateEditableCustomer={updateEditableCustomer}
+          handleCustomerDelete={handleCustomerDelete}
+          handleCancelEdit={handleCancelEdit}
+          handleSaveClick={handleSaveClick}
+          handleEditClick={handleEditClick}
+        />
+      </Dialog>
     </div>
   );
-} 
+}
