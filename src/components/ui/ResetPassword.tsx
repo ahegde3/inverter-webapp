@@ -11,6 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useSearchParams } from "next/navigation";
+import { toast } from "@/lib/toast";
+import { passwordSchema } from "@/lib/utils";
 // import { toast } from "@/lib/toast";
 
 export default function ResetPassword() {
@@ -18,33 +21,69 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
+  if (!token) {
+    toast.error({
+      title: "Invalid Reset Link",
+      description: "The password reset link is invalid or has expired.",
+    });
+    // You might want to redirect to login page here
+    return null;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // if (!email || !newPassword || !confirmPassword) {
-    //   setError("Please fill in all fields");
-    //   return;
-    // }
+    if (!newPassword || !confirmPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-    // if (newPassword.length < 8) {
-    //   setError("Password must be at least 8 characters long");
-    //   return;
-    // }
+    if (newPassword !== confirmPassword) {
+      toast.error({
+        title: "Password does not match",
+      });
+      return;
+    }
 
-    // if (newPassword !== confirmPassword) {
-    //   setError("Passwords do not match");
-    //   return;
-    // }
+    const passwordValidation = passwordSchema.safeParse(newPassword);
+    if (!passwordValidation.success) {
+      toast.error({
+        title: "Password criteria failed",
+        description:
+          "Password must be at least 8 characters,t least one uppercase letter,t least one lowercase letter,at least one number,at least one special character",
+      });
+    }
 
-    // try {
-    //   // Here you would typically make an API call to update the password
-    //   console.log("Password reset attempt with:", { email, newPassword });
-    //   // After successful password reset, redirect to login
-    //   onBackToLogin();
-    // } catch {
-    //   setError("Failed to reset password. Please try again.");
-    // }
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to reset password");
+      }
+
+      // Password reset email sent successfully
+      if (response.status === 200)
+        toast.success({
+          title: "Reset Link Sent",
+          description: "Password reset",
+        });
+    } catch (e) {
+      console.log(e);
+      toast.error({
+        title: "Failed to update password",
+      });
+    }
   };
 
   return (
@@ -58,20 +97,6 @@ export default function ResetPassword() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {/* <div className="space-y-2">
-              <Label htmlFor="email">Email Id</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError("");
-                }}
-                required
-              />
-            </div> */}
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <Input
@@ -103,7 +128,7 @@ export default function ResetPassword() {
             {error && <div className="text-sm text-destructive">{error}</div>}
           </CardContent>
           <CardFooter className="pt-6">
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" onClick={handleSubmit}>
               Reset Password
             </Button>
           </CardFooter>
