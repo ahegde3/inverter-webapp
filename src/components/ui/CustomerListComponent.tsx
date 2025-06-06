@@ -20,8 +20,17 @@ import {
 import { useCustomers } from "@/hooks/use-customers";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CustomerData } from "@/types/customer";
+import type { Device } from "@/lib/schema";
 
-export default function CustomerListComponent() {
+interface CustomerListComponentProps {
+  selectedCustomerDetail: CustomerData | null;
+  setSelectedCustomerDetail: (customer: CustomerData | null) => void;
+}
+
+export default function CustomerListComponent({
+  selectedCustomerDetail,
+  setSelectedCustomerDetail,
+}: CustomerListComponentProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -33,6 +42,7 @@ export default function CustomerListComponent() {
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCustomerAddition, setIsCustomerAddition] = useState(false);
+  const [deviceData, setDeviceData] = useState<Device[] | null>(null);
 
   // Debounce search query to avoid too many API calls
   const debouncedSearch = useDebouncedValue(searchQuery, 300);
@@ -47,6 +57,7 @@ export default function CustomerListComponent() {
     refetch,
   } = useCustomers({
     search: debouncedSearch || undefined,
+    setSelectedCustomerDetail,
     limit: 50, // Fetch more customers for better UX
   });
 
@@ -67,6 +78,7 @@ export default function CustomerListComponent() {
     setIsCustomerAddition(canEdit);
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
+    getDeviceData();
     setIsModalOpen(true);
     setIsEditable(canEdit);
   };
@@ -78,9 +90,8 @@ export default function CustomerListComponent() {
   const handleSaveClick = () => {
     if (editableCustomer) {
       if (isCustomerAddition) {
-        addNewCustomer({...editableCustomer,role:"CUSTOMER"});
-      }
-      else editCustomerData(editableCustomer);
+        addNewCustomer({ ...editableCustomer, role: "CUSTOMER" });
+      } else editCustomerData(editableCustomer);
       setSelectedCustomer(editableCustomer);
       setIsEditable(false);
       // Refetch data to get updated list
@@ -91,6 +102,7 @@ export default function CustomerListComponent() {
   const handleCancelEdit = () => {
     if (isCustomerAddition) {
       setIsCustomerAddition(false);
+      setDeviceData(null);
       setIsModalOpen(false);
       return;
     }
@@ -111,6 +123,23 @@ export default function CustomerListComponent() {
     if (!customerId) return;
     await deleteCustomer(customerId);
     setIsModalOpen(false);
+  };
+
+  const getDeviceData = async () => {
+    if (!selectedCustomerDetail) return;
+
+    try {
+      const customerId = selectedCustomerDetail.userId;
+      const response = await fetch(`/api/device?customer_id=${customerId}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch devices");
+      }
+      const data = await response.json();
+      setDeviceData(data.devices);
+    } catch (err) {
+      console.error("Error fetching devices:", err);
+    }
   };
 
   return (
@@ -182,15 +211,23 @@ export default function CustomerListComponent() {
               </div>
             ) : customers.length > 0 ? (
               customers.map((customer: CustomerData) => (
-                <div key={customer.userId}>
-                  <div className="flex items-center justify-between">
+                <div
+                  key={customer.userId}
+                  className={`group transition-colors cursor-pointer ${
+                    selectedCustomerDetail?.userId === customer.userId
+                      ? "bg-blue-50 hover:bg-blue-100"
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => setSelectedCustomerDetail(customer)}
+                >
+                  <div className="flex items-center justify-between p-2">
                     <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
                     <RxExternalLink
-                      className="w-4 h-4 text-gray-600 hover:text-gray-800 cursor-pointer"
+                      className="w-4 h-4 text-gray-600 group-hover:text-gray-800 cursor-pointer"
                       onClick={() => handleCustomerClick(customer)}
                     />
                   </div>
-                  <Separator className="my-2" />
+                  <Separator className="my-0" />
                 </div>
               ))
             ) : (
@@ -294,19 +331,107 @@ export default function CustomerListComponent() {
                   }`}
                 />
               </div>
+              {deviceData && (
+                <div className="flex flex-col gap-8 mt-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">
+                      Device Information
+                    </h3>
+                  </div>
+                  {deviceData.map((device, index) => (
+                    <div
+                      key={device.deviceId}
+                      className="flex flex-col gap-4 p-4 border rounded-lg"
+                    >
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <label
+                          htmlFor={`serialNo-${index}`}
+                          className="text-right text-sm font-medium"
+                        >
+                          Serial No
+                        </label>
+                        <input
+                          id={`serialNo-${index}`}
+                          type="text"
+                          value={device.serialNo}
+                          readOnly
+                          className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <label
+                          htmlFor={`manufacturingDate-${index}`}
+                          className="text-right text-sm font-medium"
+                        >
+                          Manufacturing Date
+                        </label>
+                        <input
+                          id={`manufacturingDate-${index}`}
+                          type="text"
+                          value={device.manufacturingDate}
+                          readOnly
+                          className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <label
+                          htmlFor={`warrantyEndDate-${index}`}
+                          className="text-right text-sm font-medium"
+                        >
+                          Warranty End Date
+                        </label>
+                        <input
+                          id={`warrantyEndDate-${index}`}
+                          type="text"
+                          value={device.warrantyEndDate}
+                          readOnly
+                          className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <label
+                          htmlFor={`deviceType-${index}`}
+                          className="text-right text-sm font-medium"
+                        >
+                          Device Type
+                        </label>
+                        <input
+                          id={`deviceType-${index}`}
+                          type="text"
+                          value={device.deviceType}
+                          readOnly
+                          className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 {isEditable ? (
                   <>
-                    <Button variant="outline" onClick={handleCancelEdit}>
+                    <Button
+                      className="cursor-pointer"
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                    >
                       Cancel
                     </Button>
-                    <Button variant="default" onClick={handleSaveClick}>
+                    <Button
+                      className="cursor-pointer"
+                      variant="default"
+                      onClick={handleSaveClick}
+                    >
                       Save
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" onClick={handleEditClick}>
+                    <Button
+                      className="cursor-pointer"
+                      variant="outline"
+                      onClick={handleEditClick}
+                    >
                       Edit
                     </Button>
                     <Button

@@ -9,6 +9,7 @@ import { UserRegistrationSchema } from "@/types/auth";
 
 interface UseCustomersOptions {
   search?: string;
+  setSelectedCustomerDetail?: (customer: CustomerData | null) => void;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -37,7 +38,14 @@ export function useCustomers(
   options: UseCustomersOptions = {}
 ): UseCustomersReturn {
   // Destructure options to avoid dependency issues
-  const { search, page, limit, sortBy, sortOrder } = options;
+  const {
+    search,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    setSelectedCustomerDetail = () => {},
+  } = options;
 
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +79,7 @@ export function useCustomers(
       if ("success" in data && data.success) {
         console.log(data.data);
         setCustomers(data.data);
+        setSelectedCustomerDetail(data.data[0]);
         setPagination(data.pagination);
       } else {
         throw new Error("Invalid response format");

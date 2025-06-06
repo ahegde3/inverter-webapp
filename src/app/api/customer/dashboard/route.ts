@@ -51,17 +51,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate customer_id format (should be a number or string that can be converted to number)
-    if (isNaN(Number(customerId))) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "customer_id must be a valid number.",
-        },
-        { status: 400 }
-      );
-    }
-
     // In a real application, you would fetch customer-specific dashboard data
     // For now, we're returning the same mock data for any valid customer_id
     const customerDashboardData = {

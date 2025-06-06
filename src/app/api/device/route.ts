@@ -3,6 +3,8 @@ import {
   deviceRegistrationSchema,
   deviceRegistrationResponseSchema,
   type DeviceRegistrationResponse,
+  deviceListResponseSchema,
+  type DeviceListResponse,
 } from "@/lib/schema";
 import { PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
@@ -53,7 +55,7 @@ export async function POST(
         "begins_with(PK, :pk) AND SK = :sk AND serialNo = :serialNo",
       ExpressionAttributeValues: {
         ":pk": "DEVICE#",
-        ":sk": "PROFILE",
+        ":sk": "METADATA",
         ":serialNo": serialNo,
       },
     });
@@ -74,35 +76,6 @@ export async function POST(
       return NextResponse.json(validatedErrorResponse, { status: 409 });
     }
 
-    // Verify that the customer exists
-    console.log("Verifying customer with customerId:", customerId);
-    const customerScanCommand = new ScanCommand({
-      TableName: "Inverter-db",
-      FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
-      ExpressionAttributeValues: {
-        ":pk": `USER#`,
-        ":sk": "PROFILE",
-      },
-    });
-
-    const customerScanResult = await ddb.send(customerScanCommand);
-    const customerExists = customerScanResult.Items?.some(
-      (item) => item.userId === customerId || item.email === customerId
-    );
-
-    if (!customerExists) {
-      const errorResponse = {
-        success: false as const,
-        deviceId: undefined,
-        message: undefined,
-        error: `Customer with ID ${customerId} not found.`,
-      };
-
-      const validatedErrorResponse =
-        deviceRegistrationResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 404 });
-    }
-
     // Generate unique device ID
     const deviceId = generateDeviceId();
     const currentTimestamp = Math.floor(Date.now() / 1000).toString();
@@ -110,7 +83,7 @@ export async function POST(
     // Create device record
     const deviceRecord = {
       PK: `DEVICE#${deviceId}`,
-      SK: "PROFILE",
+      SK: "METADATA",
       deviceId,
       serialNo,
       deviceType: device_type,
@@ -157,6 +130,82 @@ export async function POST(
     const validatedErrorResponse =
       deviceRegistrationResponseSchema.parse(errorResponse);
 
+    return NextResponse.json(validatedErrorResponse, { status: 500 });
+  }
+}
+
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<DeviceListResponse>> {
+  try {
+    const { searchParams } = new URL(request.url);
+    const customerId = searchParams.get("customer_id");
+
+    if (!customerId) {
+      const errorResponse = {
+        success: false as const,
+        devices: undefined,
+        error: "Customer ID is required",
+      };
+      const validatedErrorResponse =
+        deviceListResponseSchema.parse(errorResponse);
+      return NextResponse.json(validatedErrorResponse, { status: 400 });
+    }
+
+    // Fetch all devices for the customer
+    const deviceScanCommand = new ScanCommand({
+      TableName: "Inverter-db",
+      FilterExpression:
+        "begins_with(PK, :pk) AND SK = :sk AND customerId = :customerId",
+      ExpressionAttributeValues: {
+        ":pk": "DEVICE#",
+        ":sk": "METADATA",
+        ":customerId": customerId,
+      },
+    });
+
+    const deviceScanResult = await ddb.send(deviceScanCommand);
+
+    if (!deviceScanResult.Items || deviceScanResult.Items.length === 0) {
+      const response = {
+        success: true as const,
+        devices: [],
+        message: "No devices found for this customer",
+      };
+      const validatedResponse = deviceListResponseSchema.parse(response);
+      return NextResponse.json(validatedResponse);
+    }
+
+    const devices = deviceScanResult.Items.map((item) => ({
+      deviceId: item.deviceId,
+      serialNo: item.serialNo,
+      deviceType: item.deviceType,
+      manufacturingDate: item.manufacturingDate,
+      warrantyEndDate: item.warrantyEndDate,
+      customerId: item.customerId,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    }));
+
+    const successResponse = {
+      success: true as const,
+      devices,
+      message: "Devices retrieved successfully",
+    };
+
+    const validatedResponse = deviceListResponseSchema.parse(successResponse);
+    return NextResponse.json(validatedResponse);
+  } catch (error) {
+    console.error("Error fetching devices:", error);
+
+    const errorResponse = {
+      success: false as const,
+      devices: undefined,
+      error: "Internal server error occurred while fetching devices",
+    };
+
+    const validatedErrorResponse =
+      deviceListResponseSchema.parse(errorResponse);
     return NextResponse.json(validatedErrorResponse, { status: 500 });
   }
 }
