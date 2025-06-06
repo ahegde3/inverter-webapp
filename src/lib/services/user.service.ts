@@ -65,11 +65,7 @@ export async function createUser(userData: UserRegistrationInput) {
   }
 }
 
-export async function findUserByEmail({
-  emailId,
-}: {
-  emailId: string;
-}): Promise<User | null> {
+export async function findUserByEmail(emailId: string): Promise<User | null> {
   if (!emailId) return null;
 
   const params = {
@@ -277,5 +273,43 @@ export async function updateUserById(userData: CustomerUpdate): Promise<{
       success: false,
       error: "An unexpected error occurred",
     };
+  }
+}
+
+export async function updateUserPassword(
+  userId: string,
+  hashedPassword: string
+): Promise<void> {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+
+    const updateCommand = new UpdateCommand({
+      TableName: TABLE_NAME,
+      Key: {
+        PK: `USER#${userId}`,
+        SK: "PROFILE",
+      },
+      UpdateExpression: "SET #password = :password, #updatedAt = :updatedAt",
+      ExpressionAttributeNames: {
+        "#password": "password",
+        "#updatedAt": "updatedAt",
+      },
+      ExpressionAttributeValues: {
+        ":password": hashedPassword,
+        ":updatedAt": timestamp,
+      },
+      ConditionExpression: "attribute_exists(PK)",
+    });
+
+    await ddb.send(updateCommand);
+  } catch (error) {
+    console.error("Error updating password:", error);
+    if (
+      error instanceof Error &&
+      error.name === "ConditionalCheckFailedException"
+    ) {
+      throw new UserServiceError("User not found");
+    }
+    throw new UserServiceError("Failed to update password");
   }
 }

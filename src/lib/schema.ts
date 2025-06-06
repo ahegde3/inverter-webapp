@@ -164,3 +164,34 @@ export const customerDeleteResponseSchema = z.discriminatedUnion("success", [
 export type CustomerDeleteResponse = z.infer<
   typeof customerDeleteResponseSchema
 >;
+
+export interface Device {
+  deviceId: string;
+  serialNo: string;
+  deviceType: string;
+  manufacturingDate: string;
+  warrantyEndDate: string;
+  customerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const deviceSchema = z.object({
+  deviceId: z.string(),
+  serialNo: z.string(),
+  deviceType: z.string(),
+  manufacturingDate: z.string(),
+  warrantyEndDate: z.string(),
+  customerId: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const deviceListResponseSchema = z.object({
+  success: z.literal(true).or(z.literal(false)),
+  devices: z.array(deviceSchema).optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
+});
+
+export type DeviceListResponse = z.infer<typeof deviceListResponseSchema>;

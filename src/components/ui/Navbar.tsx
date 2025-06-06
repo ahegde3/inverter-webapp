@@ -34,7 +34,7 @@ export function Navbar({ tabList, currentTab, onTabChange }: NavbarProps) {
           <button
             key={tab}
             onClick={() => onTabChange(tab)}
-            className={`px-3 py-2 rounded-lg transition-colors ${
+            className={`px-3 py-2 rounded-lg transition-colors cursor-pointer ${
               currentTab === tab
                 ? "bg-primary text-primary-foreground"
                 : "hover:bg-muted"
