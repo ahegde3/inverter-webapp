@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,19 +35,14 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         },
         body: JSON.stringify({
           email,
-          password: password, // Send encrypted password
+          password,
         }),
       });
 
       const data: LoginResponseSchema = await response.json();
 
-      if (data.success && data.data && data.data.user.role == "ADMIN") {
+      if (data.success && data.data && data.data.user.role === "ADMIN") {
         console.log("Login successful:", data);
-
-        // Store user data and token in localStorage
-        localStorage.setItem("userToken", data.data.token);
-        localStorage.setItem("userData", JSON.stringify(data.data.user));
-
         return data;
       } else {
         throw new Error(!data.success ? data.error : "Login failed");
@@ -69,13 +64,8 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         throw new Error("Please fill in all fields");
       }
 
-      console.log("Login attempt with username:", email);
-      console.log("Password will be encrypted before sending");
-
-      // Call the login API with encrypted password
+      // Call the login API
       const loginResponse = await callLoginAPI(email, password);
-
-      console.log("Login API response:", loginResponse);
 
       // Redirect to home page after successful login
       router.push("/home");
@@ -90,6 +80,18 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
       setIsLoading(false);
     }
   };
+
+  // Check for session expiration query parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const expired = searchParams.get("expired");
+    if (expired === "true") {
+      setError("Your session has expired. Please log in again.");
+      // Remove the query parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
