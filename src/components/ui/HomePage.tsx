@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import CustomerListComponent from "./CustomerListComponent";
+import CustomerTable from "./CustomerTable";
 import Navbar from "@/components/ui/Navbar";
 import DashboardTab from "@/components/ui/DashboardTab";
 import TicketsKanban from "@/components/ui/TicketsKanban";
@@ -8,7 +8,7 @@ import { TABS, TabName } from "@/types/navigation";
 
 const TAB_COMPONENTS: Record<TabName, React.ReactNode> = {
   Dashboard: <DashboardTab />,
-  Customers: <CustomerListComponent />,
+  Customers: <CustomerTable />,
   Tickets: <TicketsKanban />,
 };
 
