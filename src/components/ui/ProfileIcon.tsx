@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,6 +14,13 @@ import AddAdminDialog from "./AddAdminDialog";
 export default function ProfileIcon() {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const role = useMemo(() => {
+    const userDataString = localStorage.getItem("userData");
+    if (!userDataString) return;
+    const userData = JSON.parse(userDataString);
+    return userData.role;
+  }, []);
 
   function handleLogout() {
     router.push("/");
@@ -33,10 +40,12 @@ export default function ProfileIcon() {
       </HoverCardTrigger>
       <HoverCardContent className="w-48">
         <div className="flex flex-col space-y-2">
-          <AddAdminDialog 
-            isOpen={isDialogOpen} 
-            onOpenChange={setIsDialogOpen} 
-          />
+          {role === "SUPER_ADMIN" && (
+            <AddAdminDialog
+              isOpen={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+            />
+          )}
           <Button
             variant="ghost"
             className="flex items-center justify-start"

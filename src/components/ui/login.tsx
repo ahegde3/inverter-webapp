@@ -41,7 +41,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
 
       const data: LoginResponseSchema = await response.json();
 
-      if (data.success && data.data && data.data.user.role == "ADMIN") {
+      if (data.success && data.data && data.data.user.role.includes("ADMIN")) {
         console.log("Login successful:", data);
 
         // Store user data and token in localStorage
