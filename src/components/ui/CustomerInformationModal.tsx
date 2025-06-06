@@ -6,12 +6,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { CustomerData } from "@/types/customer";
-
-
+import type { Device } from "@/lib/schema";
 
 interface CustomerInformationModalProps {
-  selectedCustomer: CustomerData;
-  editableCustomer: CustomerData;
+  selectedCustomer: CustomerData | null;
+  editableCustomer: CustomerData | null;
+  deviceData: Device[] | null;
   isEditable?: boolean;
   updateEditableCustomer: (field: keyof CustomerData, value: string) => void;
   handleCustomerDelete: (userId: string) => void;
@@ -23,6 +23,7 @@ interface CustomerInformationModalProps {
 export default function CustomerInformationModal({
   selectedCustomer,
   editableCustomer,
+  deviceData,
   isEditable = true,
   updateEditableCustomer,
   handleCustomerDelete,
@@ -118,7 +119,7 @@ export default function CustomerInformationModal({
               }`}
             />
           </div>
-          {/* {deviceData && (
+          {deviceData && (
             <div className="flex flex-col gap-8 mt-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Device Information</h3>
@@ -191,7 +192,7 @@ export default function CustomerInformationModal({
                 </div>
               ))}
             </div>
-          )} */}
+          )}
           <div className="flex items-center justify-between">
             {isEditable ? (
               <>
