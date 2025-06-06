@@ -20,37 +20,40 @@ interface ForgotPasswordPageProps {
 export default function ForgotPasswordPage({
   onBackToLogin,
 }: ForgotPasswordPageProps) {
-  const [email, setEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailId, setEmailId] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!email || !newPassword || !confirmPassword) {
+    if (!emailId) {
       setError("Please fill in all fields");
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
     try {
-      // Here you would typically make an API call to update the password
-      console.log("Password reset attempt with:", { email, newPassword });
-      // After successful password reset, redirect to login
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ emailId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to reset password");
+      }
+
+      // Password reset email sent successfully
       onBackToLogin();
-    } catch {
-      setError("Failed to reset password. Please try again.");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to reset password. Please try again."
+      );
     }
   };
 
@@ -71,37 +74,9 @@ export default function ForgotPasswordPage({
                 id="email"
                 type="email"
                 placeholder="Enter your email"
-                value={email}
+                value={emailId}
                 onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError("");
-                }}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setError("");
-                }}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
+                  setEmailId(e.target.value);
                   setError("");
                 }}
                 required
@@ -109,6 +84,15 @@ export default function ForgotPasswordPage({
             </div>
             {error && <div className="text-sm text-destructive">{error}</div>}
           </CardContent>
+          <Button
+            type="button"
+            variant="link"
+            className="text-sm text-gray-600 px-6 h-auto"
+            onClick={onBackToLogin}
+            // disabled={isLoading}
+          >
+            Forgot your password?
+          </Button>
           <CardFooter className="pt-6">
             <Button type="submit" className="w-full">
               Reset Password

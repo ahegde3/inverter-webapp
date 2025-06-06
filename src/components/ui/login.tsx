@@ -142,7 +142,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
             </div>
 
             {/* Demo credentials info */}
-            <div className="p-3 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
+            {/* <div className="p-3 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded-md">
               <div className="font-medium mb-1">Demo Credentials:</div>
               <div>Admin: admin / admin123</div>
               <div>User: john.doe / password123</div>
@@ -150,7 +150,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
               <div className="mt-1 text-green-600">
                 🔒 Passwords are encrypted before sending
               </div>
-            </div>
+            </div> */}
           </CardContent>
           <CardFooter className="pt-6">
             <Button type="submit" className="w-full" disabled={isLoading}>

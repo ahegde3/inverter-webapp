@@ -6,11 +6,12 @@ const JWT_SECRET = process.env.SECRET_KEY || "your-secret";
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
 
 export async function POST(request: NextRequest) {
+  return;
   const body = await request.json();
-  const { email } = body;
+  const { emailId } = body;
 
   // 🔐 1. Check if user exists
-  const user = await findUserByEmail(email); // Replace with your DB logic
+  const user = await findUserByEmail(emailId); // Replace with your DB logic
   if (!user)
     return NextResponse.json({ message: "User not found", status: 404 });
 
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   // 📧 3. Send reset email
   const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
 
-  await sendResetEmail(email, resetLink);
+  await sendResetEmail(emailId, resetLink);
 
   return NextResponse.json({ message: "Reset link sent!", status: 200 });
 }
