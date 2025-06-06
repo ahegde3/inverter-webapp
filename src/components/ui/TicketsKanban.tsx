@@ -949,7 +949,10 @@ export default function TicketsKanban() {
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               variant="destructive"
-              onClick={() => setIsDeleteDialogOpen(true)}
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setIsDeleteDialogOpen(true);
+              }}
               className="w-full sm:w-auto"
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -968,10 +971,7 @@ export default function TicketsKanban() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
+      <AlertDialog open={isDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -987,7 +987,10 @@ export default function TicketsKanban() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={deleteTicket}
+              onClick={() => {
+                deleteTicket();
+                setIsDeleteDialogOpen(false);
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
