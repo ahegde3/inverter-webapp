@@ -3,12 +3,13 @@ import { useState } from "react";
 // import CustomerListComponent from "./CustomerListComponent";
 import Navbar from "@/components/ui/Navbar";
 import DashboardTab from "@/components/ui/DashboardTab";
+import TicketsKanban from "@/components/ui/TicketsKanban";
 import { TABS, TabName } from "@/types/navigation";
 
 const TAB_COMPONENTS: Record<TabName, React.ReactNode> = {
   Dashboard: <DashboardTab />,
   Customers: <DashboardTab />,
-  Tickets: <DashboardTab />, // TODO: Replace with actual Settings component
+  Tickets: <TicketsKanban />,
 };
 
 export default function HomePage() {

@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ticketCreateSchema,
   ticketResponseSchema,
+  ticketsGetResponseSchema,
+  ticketUpdateSchema,
+  ticketUpdateResponseSchema,
   type TicketResponse,
+  type TicketsGetResponse,
+  type TicketUpdateResponse,
 } from "@/lib/schema/ticket";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
+import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 
 // Generate a unique ticket ID
 function generateTicketId(): string {
@@ -149,4 +155,216 @@ export async function POST(
 
     return NextResponse.json(validatedErrorResponse, { status: 500 });
   }
+}
+
+// GET method to fetch all tickets
+export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
+  try {
+    console.log("Fetching all tickets from database...");
+
+    const scanCommand = new ScanCommand({
+      TableName: "Inverter-db",
+      FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
+      ExpressionAttributeValues: {
+        ":pk": "TICKET#",
+        ":sk": "DETAILS",
+      },
+    });
+
+    const result = await ddb.send(scanCommand);
+    const tickets = (result.Items || []) as DynamoDBTicket[];
+
+    console.log(`Found ${tickets.length} tickets in database`);
+
+    // Transform the data to match the frontend Ticket interface
+    const transformedTickets = tickets.map((item: DynamoDBTicket) => {
+      // Validate and normalize status
+      let normalizedStatus = item.status?.trim().toUpperCase();
+
+      // Map any variations to standard values
+      switch (normalizedStatus) {
+        case "OPEN":
+        case "NEW":
+        case "PENDING":
+          normalizedStatus = "OPEN";
+          break;
+        case "IN_PROGRESS":
+        case "IN-PROGRESS":
+        case "INPROGRESS":
+        case "PROCESSING":
+        case "WORKING":
+          normalizedStatus = "IN_PROGRESS";
+          break;
+        case "COMPLETED":
+        case "COMPLETE":
+        case "DONE":
+        case "RESOLVED":
+        case "CLOSED":
+          normalizedStatus = "COMPLETED";
+          break;
+        default:
+          console.warn(
+            `Unknown status "${item.status}" for ticket ${item.ticketId}, defaulting to OPEN`
+          );
+          normalizedStatus = "OPEN";
+      }
+
+      return {
+        ticketId: item.ticketId,
+        customerId: item.customerId,
+        deviceId: item.deviceId,
+        message: item.message,
+        status: normalizedStatus,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        PK: item.PK,
+        SK: item.SK,
+      };
+    });
+
+    console.log(
+      `Transformed ${transformedTickets.length} tickets with status distribution:`,
+      transformedTickets.reduce((acc: Record<string, number>, ticket) => {
+        acc[ticket.status] = (acc[ticket.status] || 0) + 1;
+        return acc;
+      }, {})
+    );
+
+    const successResponse = {
+      success: true,
+      tickets: transformedTickets,
+    };
+
+    const validatedSuccessResponse =
+      ticketsGetResponseSchema.parse(successResponse);
+    return NextResponse.json(validatedSuccessResponse, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+
+    const errorResponse = {
+      success: false,
+      error: "Failed to fetch tickets from database",
+    };
+
+    const validatedErrorResponse =
+      ticketsGetResponseSchema.parse(errorResponse);
+    return NextResponse.json(validatedErrorResponse, { status: 500 });
+  }
+}
+
+// PUT method to update ticket status
+export async function PUT(
+  request: NextRequest
+): Promise<NextResponse<TicketUpdateResponse>> {
+  try {
+    const body = await request.json();
+
+    // Validate request body
+    const validationResult = ticketUpdateSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      const errorResponse = {
+        success: false,
+        error: `Validation error: ${validationResult.error.message}`,
+      };
+
+      const validatedErrorResponse =
+        ticketUpdateResponseSchema.parse(errorResponse);
+      return NextResponse.json(validatedErrorResponse, { status: 400 });
+    }
+
+    const { ticketId, status } = validationResult.data;
+
+    console.log(`Updating ticket ${ticketId} status to ${status}`);
+
+    // Update the ticket status in DynamoDB
+    const updateCommand = new UpdateCommand({
+      TableName: "Inverter-db",
+      Key: {
+        PK: `TICKET#${ticketId}`,
+        SK: "DETAILS",
+      },
+      UpdateExpression: "SET #status = :status, updatedAt = :updatedAt",
+      ExpressionAttributeNames: {
+        "#status": "status",
+      },
+      ExpressionAttributeValues: {
+        ":status": status,
+        ":updatedAt": new Date().toISOString(),
+      },
+      ConditionExpression: "attribute_exists(PK)",
+      ReturnValues: "ALL_NEW",
+    });
+
+    const result = await ddb.send(updateCommand);
+
+    if (!result.Attributes) {
+      const errorResponse = {
+        success: false,
+        error: "Failed to update ticket",
+      };
+
+      const validatedErrorResponse =
+        ticketUpdateResponseSchema.parse(errorResponse);
+      return NextResponse.json(validatedErrorResponse, { status: 500 });
+    }
+
+    console.log(`Successfully updated ticket ${ticketId} to status ${status}`);
+
+    const successResponse = {
+      success: true,
+      message: "Ticket status updated successfully",
+      ticket: {
+        ticketId: result.Attributes.ticketId,
+        status: result.Attributes.status,
+        updatedAt: result.Attributes.updatedAt,
+      },
+    };
+
+    const validatedSuccessResponse =
+      ticketUpdateResponseSchema.parse(successResponse);
+    return NextResponse.json(validatedSuccessResponse, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Error updating ticket status:", error);
+
+    let errorResponse;
+
+    // Handle specific DynamoDB errors
+    if (
+      error instanceof Error &&
+      error.name === "ConditionalCheckFailedException"
+    ) {
+      errorResponse = {
+        success: false,
+        error: "Ticket not found",
+      };
+    } else {
+      errorResponse = {
+        success: false,
+        error: "Failed to update ticket status",
+      };
+    }
+
+    const validatedErrorResponse =
+      ticketUpdateResponseSchema.parse(errorResponse);
+    return NextResponse.json(validatedErrorResponse, {
+      status:
+        error instanceof Error &&
+        error.name === "ConditionalCheckFailedException"
+          ? 404
+          : 500,
+    });
+  }
+}
+
+interface DynamoDBTicket {
+  ticketId: string;
+  customerId: string;
+  deviceId: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  PK: string;
+  SK: string;
 }
