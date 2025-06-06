@@ -92,7 +92,7 @@ export function useCustomers(
     } finally {
       setLoading(false);
     }
-  }, [search, page, limit, sortBy, sortOrder]);
+  }, [search, page, limit, sortBy, sortOrder, setSelectedCustomerDetail]);
 
   useEffect(() => {
     fetchCustomers();

@@ -8,7 +8,7 @@ import { TABS, TabName } from "@/types/navigation";
 
 const TAB_COMPONENTS: Record<TabName, React.ReactNode> = {
   Dashboard: <DashboardTab />,
-  Customers:  <DashboardTab />,,
+  Customers: <DashboardTab />,
   Tickets: <TicketsKanban />,
 };
 
