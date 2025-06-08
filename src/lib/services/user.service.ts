@@ -35,6 +35,8 @@ export async function createUser(userData: UserRegistrationInput) {
       phoneNo: userData.phoneNo,
       address: userData.address,
       password: userData.password,
+      dateOfBirth: userData.dateOfBirth,
+      state: userData.state,
       role: userData.role,
       createdAt: timestamp,
       updatedAt: timestamp,

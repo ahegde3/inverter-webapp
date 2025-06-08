@@ -139,8 +139,9 @@ export function useCustomers(
   };
 
   const editCustomerData = async (body: object) => {
+    console.log("Body", body);
     const validationResult = customerUpdateSchema.safeParse(body);
-
+    console.log("Validation Result", validationResult);
     if (!validationResult.success) {
       throw new Error(
         validationResult.error.errors

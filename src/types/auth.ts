@@ -4,6 +4,7 @@ export const UserRole = {
   CUSTOMER: "CUSTOMER",
   ADMIN: "ADMIN",
   TECHNICIAN: "TECHNICIAN",
+  SUPER_ADMIN: "SUPER_ADMIN",
 } as const;
 
 export const UserRegistrationSchema = z.object({
@@ -17,7 +18,12 @@ export const UserRegistrationSchema = z.object({
   state: z.string().optional(),
 
   role: z
-    .enum([UserRole.CUSTOMER, UserRole.ADMIN, UserRole.TECHNICIAN])
+    .enum([
+      UserRole.CUSTOMER,
+      UserRole.ADMIN,
+      UserRole.TECHNICIAN,
+      UserRole.SUPER_ADMIN,
+    ])
     .default(UserRole.CUSTOMER),
 });
 
