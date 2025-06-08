@@ -40,7 +40,7 @@ export default function CustomerTable() {
       setIsLoading(true);
       setError(null);
 
-      console.log("Fetching customers from API...");
+
 
       const response = await fetch("/api/customer", {
         method: "GET",
@@ -54,13 +54,11 @@ export default function CustomerTable() {
       }
 
       const result: CustomerApiResponse = await response.json();
-      console.log("API Response:", result);
+
 
       if (result.success && "data" in result) {
         setCustomers(result.data || []);
-        console.log(
-          `Loaded ${result.data?.length || 0} customers from database`
-        );
+
       } else {
         throw new Error(
           "error" in result ? result.error : "Failed to fetch customers"
@@ -135,7 +133,6 @@ export default function CustomerTable() {
       setIsModalOpen(false); // Close modal after successful save
       await fetchCustomers(); // Refresh the list
     } catch (error) {
-      console.error("Error updating customer:", error);
       setError(
         error instanceof Error ? error.message : "Failed to update customer"
       );

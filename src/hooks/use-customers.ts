@@ -77,7 +77,7 @@ export function useCustomers(
       }
 
       if ("success" in data && data.success) {
-        console.log(data.data);
+
         setCustomers(data.data);
         setSelectedCustomerDetail(data.data[0]);
         setPagination(data.pagination);
@@ -88,7 +88,6 @@ export function useCustomers(
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
-      console.error("Error fetching customers:", err);
     } finally {
       setLoading(false);
     }
@@ -132,16 +131,13 @@ export function useCustomers(
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
-      console.error("Error deleting customer:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const editCustomerData = async (body: object) => {
-    console.log("Body", body);
     const validationResult = customerUpdateSchema.safeParse(body);
-    console.log("Validation Result", validationResult);
     if (!validationResult.success) {
       throw new Error(
         validationResult.error.errors
@@ -183,7 +179,6 @@ export function useCustomers(
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
-      console.error("Error deleting customer:", err);
     } finally {
       setLoading(false);
     }
@@ -203,7 +198,6 @@ export function useCustomers(
     try {
       setLoading(true);
       setError(null);
-      console.log(validationResult.data);
       const response = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: {
@@ -232,7 +226,6 @@ export function useCustomers(
       const errorMessage =
         err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
-      console.error("Error deleting customer:", err);
     } finally {
       setLoading(false);
     }

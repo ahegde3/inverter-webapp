@@ -42,7 +42,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
       const data: LoginResponseSchema = await response.json();
 
       if (data.success && data.data && data.data.user.role.includes("ADMIN")) {
-        console.log("Login successful:", data);
+
 
         // Set token in an HTTP-only cookie
         document.cookie = `token=${data.data.token}; path=/; max-age=86400; samesite=strict; secure`;
@@ -71,13 +71,11 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         throw new Error("Please fill in all fields");
       }
 
-      console.log("Login attempt with username:", email);
-      console.log("Password will be encrypted before sending");
+
 
       // Call the login API with encrypted password
-      const loginResponse = await callLoginAPI(email, password);
+     await callLoginAPI(email, password);
 
-      console.log("Login API response:", loginResponse);
 
       // Redirect to home page after successful login
       router.push("/home");

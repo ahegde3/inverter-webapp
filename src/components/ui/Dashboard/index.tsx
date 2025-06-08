@@ -69,8 +69,7 @@ export default function Dashboard({ selectedCustomerDetail }: DashboardProps) {
       const data: DashboardResponse = await response.json();
 
       if (data.success) {
-        console.log("Dashboard data retrieved successfully:", data);
-        console.log("Dashboard items:", data.data.dashboardItems);
+
 
         // Store dashboard data in localStorage for persistence
         localStorage.setItem("dashboardData", JSON.stringify(data.data));
@@ -118,7 +117,6 @@ export default function Dashboard({ selectedCustomerDetail }: DashboardProps) {
         const customerId = storedCustomerId || "123";
         const name = userData.firstName + " " + userData.lastName;
 
-        console.log("Loading dashboard for customer:", customerId);
         await callDashboardAPI(customerId);
         setUserName(name);
       } catch (error) {
