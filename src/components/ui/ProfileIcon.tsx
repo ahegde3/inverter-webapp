@@ -25,9 +25,15 @@ export default function ProfileIcon() {
   }, []);
 
   function handleLogout() {
+    // Clear the authentication cookie
+    document.cookie =
+      "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict; secure";
+
+    // Clear user data from localStorage
+    localStorage.removeItem("userData");
+
+    // Redirect to login page
     router.push("/");
-    // Implement logout functionality here
-    console.log("Logging out...");
   }
 
   const getNameInitial = () => {

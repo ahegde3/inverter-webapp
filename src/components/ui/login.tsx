@@ -44,8 +44,10 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
       if (data.success && data.data && data.data.user.role.includes("ADMIN")) {
         console.log("Login successful:", data);
 
-        // Store user data and token in localStorage
-        localStorage.setItem("userToken", data.data.token);
+        // Set token in an HTTP-only cookie
+        document.cookie = `token=${data.data.token}; path=/; max-age=86400; samesite=strict; secure`;
+
+        // Store user data in localStorage (but not the token)
         localStorage.setItem("userData", JSON.stringify(data.data.user));
 
         return data;
