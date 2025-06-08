@@ -12,7 +12,7 @@ export const UserRegistrationSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   emailId: z.string().email("Invalid email address"),
   phoneNo: z.string().optional(),
-  address: z.string().min(1, "Address is required").max(200),
+  address: z.string().min(1, "Address is required").max(200).optional(),
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
   state: z.string().optional(),

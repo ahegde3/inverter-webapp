@@ -6,13 +6,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus } from "lucide-react";
 import { UserRegistrationSchema } from "@/types/auth";
 
 interface AddAdminDialogProps {
@@ -29,7 +27,7 @@ export default function AddAdminDialog({
     lastName: "",
     emailId: "",
     phone: "",
-    address: "",
+    // address: "",
   });
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -90,28 +88,24 @@ export default function AddAdminDialog({
 
   async function handleAddAdmin() {
     // Implement add admin functionality here
-    console.log("Adding admin:", formData);
     await addNewAdmin(formData);
-    onOpenChange(false);
     // Reset form
     setFormData({
       firstName: "",
       lastName: "",
       emailId: "",
       phone: "",
-      address: "",
+      // address: "",
     });
+    onOpenChange(false);
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" className="flex items-center justify-start">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Admin
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={isOpen} onOpenChange={onOpenChange} modal>
+      <DialogContent
+        className="sm:max-w-[425px]"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add New Admin</DialogTitle>
           <DialogDescription>
@@ -174,7 +168,7 @@ export default function AddAdminDialog({
               placeholder="Enter phone number"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+          {/* <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="address" className="text-right">
               Role
             </Label>
@@ -186,7 +180,7 @@ export default function AddAdminDialog({
               className="col-span-3"
               placeholder="Enter role (e.g., Admin, Super Admin)"
             />
-          </div>
+          </div> */}
         </div>
         <DialogFooter>
           <Button type="submit" onClick={handleAddAdmin}>

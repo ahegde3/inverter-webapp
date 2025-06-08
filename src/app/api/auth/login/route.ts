@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = result.data;
     const encryptedPassword: string = encryptPassword(password);
+    console.log("encryptedPassword", encryptedPassword);
 
     // Find user
     const user = await findUserByEmail(email);

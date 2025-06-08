@@ -8,7 +8,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, UserPlus } from "lucide-react";
 import AddAdminDialog from "./AddAdminDialog";
 import { User } from "@/lib/schema";
 
@@ -43,33 +43,42 @@ export default function ProfileIcon() {
   };
 
   return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <div className="cursor-pointer">
-          <Avatar className="h-10 w-10">
-            {/* <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" /> */}
-            <AvatarFallback>{getNameInitial()}</AvatarFallback>
-          </Avatar>
-        </div>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-48">
-        <div className="flex flex-col space-y-2">
-          {userData && userData.role === "SUPER_ADMIN" && (
-            <AddAdminDialog
-              isOpen={isDialogOpen}
-              onOpenChange={setIsDialogOpen}
-            />
-          )}
-          <Button
-            variant="ghost"
-            className="flex items-center justify-start"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
-      </HoverCardContent>
-    </HoverCard>
+    <>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <div className="cursor-pointer">
+            <Avatar className="h-10 w-10">
+              {/* <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" /> */}
+              <AvatarFallback>{getNameInitial()}</AvatarFallback>
+            </Avatar>
+          </div>
+        </HoverCardTrigger>
+        <HoverCardContent className="w-48">
+          <div className="flex flex-col space-y-2">
+            {userData && userData.role === "SUPER_ADMIN" && (
+              <Button
+                variant="ghost"
+                className="flex items-center justify-start"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Admin
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              className="flex items-center justify-start"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </HoverCardContent>
+      </HoverCard>
+      {userData && userData.role === "SUPER_ADMIN" && (
+        <AddAdminDialog isOpen={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      )}
+    </>
   );
 }
