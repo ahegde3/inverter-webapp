@@ -9,6 +9,9 @@ export const userSchema = z.object({
   lastName: z.string().min(1),
   role: z.string(),
   address: z.string(),
+  state: z.string(),
+  phoneNo: z.string(),
+  dateOfBirth: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
