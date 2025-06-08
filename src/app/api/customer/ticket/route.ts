@@ -5,9 +5,12 @@ import {
   ticketsGetResponseSchema,
   ticketUpdateSchema,
   ticketUpdateResponseSchema,
+  ticketFullUpdateSchema,
+  ticketFullUpdateResponseSchema,
   type TicketResponse,
   type TicketsGetResponse,
   type TicketUpdateResponse,
+  type TicketFullUpdateResponse,
 } from "@/lib/schema/ticket";
 import { PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb } from "@/lib/dynamo";
@@ -252,80 +255,157 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
   }
 }
 
-// PUT method to update ticket status
+// PUT method to update ticket (supports both status-only and full updates)
 export async function PUT(
   request: NextRequest
-): Promise<NextResponse<TicketUpdateResponse>> {
+): Promise<NextResponse<TicketUpdateResponse | TicketFullUpdateResponse>> {
   try {
     const body = await request.json();
 
-    // Validate request body
-    const validationResult = ticketUpdateSchema.safeParse(body);
+    // Determine if this is a full update or status-only update
+    const isFullUpdate = body.customerId || body.deviceId || body.message;
 
-    if (!validationResult.success) {
-      const errorResponse = {
-        success: false,
-        error: `Validation error: ${validationResult.error.message}`,
+    if (isFullUpdate) {
+      // Handle full ticket update
+      const validationResult = ticketFullUpdateSchema.safeParse(body);
+
+      if (!validationResult.success) {
+        const errorResponse = {
+          success: false,
+          error: `Validation error: ${validationResult.error.message}`,
+        };
+
+        const validatedErrorResponse =
+          ticketFullUpdateResponseSchema.parse(errorResponse);
+        return NextResponse.json(validatedErrorResponse, { status: 400 });
+      }
+
+      const { ticketId, customerId, deviceId, message, status } = validationResult.data;
+
+      console.log(`Updating complete ticket details for ${ticketId}`);
+
+      // Update the ticket in DynamoDB
+      const updateCommand = new UpdateCommand({
+        TableName: "Inverter-db",
+        Key: {
+          PK: `TICKET#${ticketId}`,
+          SK: "DETAILS",
+        },
+        UpdateExpression: "SET customerId = :customerId, deviceId = :deviceId, message = :message, #status = :status, updatedAt = :updatedAt",
+        ExpressionAttributeNames: {
+          "#status": "status",
+        },
+        ExpressionAttributeValues: {
+          ":customerId": customerId,
+          ":deviceId": deviceId,
+          ":message": message,
+          ":status": status,
+          ":updatedAt": new Date().toISOString(),
+        },
+        ConditionExpression: "attribute_exists(PK)",
+        ReturnValues: "ALL_NEW",
+      });
+
+      const result = await ddb.send(updateCommand);
+
+      if (!result.Attributes) {
+        const errorResponse = {
+          success: false,
+          error: "Failed to update ticket",
+        };
+
+        const validatedErrorResponse =
+          ticketFullUpdateResponseSchema.parse(errorResponse);
+        return NextResponse.json(validatedErrorResponse, { status: 500 });
+      }
+
+      console.log(`Successfully updated ticket ${ticketId}`);
+
+      const successResponse = {
+        success: true,
+        message: "Ticket updated successfully",
+        ticket: {
+          ticketId: result.Attributes.ticketId,
+          customerId: result.Attributes.customerId,
+          deviceId: result.Attributes.deviceId,
+          message: result.Attributes.message,
+          status: result.Attributes.status,
+          updatedAt: result.Attributes.updatedAt,
+        },
       };
 
-      const validatedErrorResponse =
-        ticketUpdateResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 400 });
-    }
+      const validatedSuccessResponse =
+        ticketFullUpdateResponseSchema.parse(successResponse);
+      return NextResponse.json(validatedSuccessResponse, { status: 200 });
+    } else {
+      // Handle status-only update (backward compatibility)
+      const validationResult = ticketUpdateSchema.safeParse(body);
 
-    const { ticketId, status } = validationResult.data;
+      if (!validationResult.success) {
+        const errorResponse = {
+          success: false,
+          error: `Validation error: ${validationResult.error.message}`,
+        };
 
-    console.log(`Updating ticket ${ticketId} status to ${status}`);
+        const validatedErrorResponse =
+          ticketUpdateResponseSchema.parse(errorResponse);
+        return NextResponse.json(validatedErrorResponse, { status: 400 });
+      }
 
-    // Update the ticket status in DynamoDB
-    const updateCommand = new UpdateCommand({
-      TableName: "Inverter-db",
-      Key: {
-        PK: `TICKET#${ticketId}`,
-        SK: "DETAILS",
-      },
-      UpdateExpression: "SET #status = :status, updatedAt = :updatedAt",
-      ExpressionAttributeNames: {
-        "#status": "status",
-      },
-      ExpressionAttributeValues: {
-        ":status": status,
-        ":updatedAt": new Date().toISOString(),
-      },
-      ConditionExpression: "attribute_exists(PK)",
-      ReturnValues: "ALL_NEW",
-    });
+      const { ticketId, status } = validationResult.data;
 
-    const result = await ddb.send(updateCommand);
+      console.log(`Updating ticket ${ticketId} status to ${status}`);
 
-    if (!result.Attributes) {
-      const errorResponse = {
-        success: false,
-        error: "Failed to update ticket",
+      // Update the ticket status in DynamoDB
+      const updateCommand = new UpdateCommand({
+        TableName: "Inverter-db",
+        Key: {
+          PK: `TICKET#${ticketId}`,
+          SK: "DETAILS",
+        },
+        UpdateExpression: "SET #status = :status, updatedAt = :updatedAt",
+        ExpressionAttributeNames: {
+          "#status": "status",
+        },
+        ExpressionAttributeValues: {
+          ":status": status,
+          ":updatedAt": new Date().toISOString(),
+        },
+        ConditionExpression: "attribute_exists(PK)",
+        ReturnValues: "ALL_NEW",
+      });
+
+      const result = await ddb.send(updateCommand);
+
+      if (!result.Attributes) {
+        const errorResponse = {
+          success: false,
+          error: "Failed to update ticket",
+        };
+
+        const validatedErrorResponse =
+          ticketUpdateResponseSchema.parse(errorResponse);
+        return NextResponse.json(validatedErrorResponse, { status: 500 });
+      }
+
+      console.log(`Successfully updated ticket ${ticketId} to status ${status}`);
+
+      const successResponse = {
+        success: true,
+        message: "Ticket status updated successfully",
+        ticket: {
+          ticketId: result.Attributes.ticketId,
+          status: result.Attributes.status,
+          updatedAt: result.Attributes.updatedAt,
+        },
       };
 
-      const validatedErrorResponse =
-        ticketUpdateResponseSchema.parse(errorResponse);
-      return NextResponse.json(validatedErrorResponse, { status: 500 });
+      const validatedSuccessResponse =
+        ticketUpdateResponseSchema.parse(successResponse);
+      return NextResponse.json(validatedSuccessResponse, { status: 200 });
     }
-
-    console.log(`Successfully updated ticket ${ticketId} to status ${status}`);
-
-    const successResponse = {
-      success: true,
-      message: "Ticket status updated successfully",
-      ticket: {
-        ticketId: result.Attributes.ticketId,
-        status: result.Attributes.status,
-        updatedAt: result.Attributes.updatedAt,
-      },
-    };
-
-    const validatedSuccessResponse =
-      ticketUpdateResponseSchema.parse(successResponse);
-    return NextResponse.json(validatedSuccessResponse, { status: 200 });
   } catch (error: unknown) {
-    console.error("Error updating ticket status:", error);
+    console.error("Error updating ticket:", error);
 
     let errorResponse;
 
@@ -341,7 +421,7 @@ export async function PUT(
     } else {
       errorResponse = {
         success: false,
-        error: "Failed to update ticket status",
+        error: "Failed to update ticket",
       };
     }
 

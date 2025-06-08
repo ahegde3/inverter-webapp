@@ -153,6 +153,13 @@ export default function TicketsKanban() {
     message: "",
     status: "OPEN" as Ticket["status"], // Updated default
   });
+  const [originalTicket, setOriginalTicket] = useState({
+    customerId: "",
+    deviceId: "",
+    message: "",
+    status: "OPEN" as Ticket["status"],
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Fetch tickets from API
   const fetchTickets = async () => {
@@ -330,7 +337,7 @@ export default function TicketsKanban() {
         error instanceof Error
           ? error.message
           : "Failed to update ticket status";
-      alert(`Error updating ticket: ${errorMessage}`);
+      setError(`Error updating ticket: ${errorMessage}`);
 
       throw error;
     }
@@ -352,12 +359,14 @@ export default function TicketsKanban() {
   // Handle ticket click
   const handleTicketClick = (ticket: Ticket) => {
     setSelectedTicket(ticket);
-    setEditTicket({
+    const ticketData = {
       customerId: ticket.customerId,
       deviceId: ticket.deviceId,
       message: ticket.message,
       status: ticket.status,
-    });
+    };
+    setEditTicket(ticketData);
+    setOriginalTicket(ticketData); // Store original values for comparison
     setIsEditDialogOpen(true);
   };
 
@@ -369,26 +378,26 @@ export default function TicketsKanban() {
 
       // Validate required fields
       if (!newTicket.customerId.trim()) {
-        alert("Please enter a Customer ID");
+        setError("Please enter a Customer ID");
         return;
       }
       if (!newTicket.deviceId.trim()) {
-        alert("Please enter a Device ID");
+        setError("Please enter a Device ID");
         return;
       }
       if (!newTicket.message.trim()) {
-        alert("Please enter a message describing the issue");
+        setError("Please enter a message describing the issue");
         return;
       }
       if (!newTicket.emailId.trim()) {
-        alert("Please enter an email address");
+        setError("Please enter an email address");
         return;
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(newTicket.emailId)) {
-        alert("Please enter a valid email address");
+        setError("Please enter a valid email address");
         return;
       }
 
@@ -446,7 +455,6 @@ export default function TicketsKanban() {
         setIsCreateDialogOpen(false);
 
         // Show success message
-        alert(`Ticket created successfully! Ticket ID: ${result.ticketId}`);
         console.log("Ticket created successfully:", result.ticketId);
 
         // Refresh tickets list from database
@@ -454,7 +462,7 @@ export default function TicketsKanban() {
       } else {
         // Handle API error response
         const errorMessage = result.error || "Failed to create ticket";
-        alert(`Error: ${errorMessage}`);
+        setError(`Error: ${errorMessage}`);
         console.error("API returned error:", result);
       }
     } catch (createError) {
@@ -475,32 +483,79 @@ export default function TicketsKanban() {
     }
   };
 
+  // Check if ticket data has changed
+  const hasTicketChanged = () => {
+    return (
+      editTicket.customerId !== originalTicket.customerId ||
+      editTicket.deviceId !== originalTicket.deviceId ||
+      editTicket.message !== originalTicket.message ||
+      editTicket.status !== originalTicket.status
+    );
+  };
+
   // Update existing ticket
   const updateTicket = async () => {
     try {
       if (!selectedTicket) return;
 
       if (
-        !editTicket.customerId ||
-        !editTicket.deviceId ||
-        !editTicket.message
+        !editTicket.customerId.trim() ||
+        !editTicket.deviceId.trim() ||
+        !editTicket.message.trim()
       ) {
-        alert("Please fill in all fields");
+        setError("Please fill in all fields");
         return;
       }
 
-      // In a real app, you'd call a PUT/PATCH API endpoint here
-      // For now, we'll just update the local state
+      setIsUpdating(true);
+      setError(null);
+
+      console.log("Updating ticket with data:", {
+        ticketId: selectedTicket.ticketId,
+        customerId: editTicket.customerId,
+        deviceId: editTicket.deviceId,
+        message: editTicket.message,
+        status: editTicket.status,
+      });
+
+      // Call the existing API endpoint for updating complete ticket details
+      const response = await fetch("/api/customer/ticket", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticketId: selectedTicket.ticketId,
+          customerId: editTicket.customerId,
+          deviceId: editTicket.deviceId,
+          message: editTicket.message,
+          status: editTicket.status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to update ticket");
+      }
+
+      console.log("Ticket updated successfully:", result);
+
+      // Update local state with the returned data
       setTickets((prev) =>
         prev.map((ticket) =>
           ticket.ticketId === selectedTicket.ticketId
             ? {
                 ...ticket,
-                customerId: editTicket.customerId,
-                deviceId: editTicket.deviceId,
-                message: editTicket.message,
-                status: editTicket.status,
-                updatedAt: new Date().toISOString(),
+                customerId: result.ticket.customerId,
+                deviceId: result.ticket.deviceId,
+                message: result.ticket.message,
+                status: result.ticket.status,
+                updatedAt: result.ticket.updatedAt,
               }
             : ticket
         )
@@ -508,7 +563,9 @@ export default function TicketsKanban() {
 
       setIsEditDialogOpen(false);
       setSelectedTicket(null);
-      alert("Ticket updated successfully!");
+
+      // Refresh tickets to ensure consistency
+      await fetchTickets();
     } catch (updateError) {
       console.error("Error updating ticket:", updateError);
       setError(
@@ -516,6 +573,9 @@ export default function TicketsKanban() {
           ? updateError.message
           : "Failed to update ticket"
       );
+      // Error already set in setError above
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -533,7 +593,6 @@ export default function TicketsKanban() {
       setIsDeleteDialogOpen(false);
       setIsEditDialogOpen(false);
       setSelectedTicket(null);
-      alert("Ticket deleted successfully!");
     } catch (deleteError) {
       console.error("Error deleting ticket:", deleteError);
       setError(
@@ -800,8 +859,20 @@ export default function TicketsKanban() {
       </div>
 
       {/* Edit Ticket Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
+      <Dialog 
+        open={isEditDialogOpen} 
+        onOpenChange={(open) => {
+          // Prevent closing during update
+          if (!isUpdating) {
+            setIsEditDialogOpen(open);
+          }
+        }}
+      >
+        <DialogContent 
+          className="sm:max-w-[500px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto"
+          onPointerDownOutside={(e) => isUpdating && e.preventDefault()}
+          onEscapeKeyDown={(e) => isUpdating && e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Edit Ticket</DialogTitle>
             <DialogDescription>
@@ -827,6 +898,7 @@ export default function TicketsKanban() {
                 }
                 className="sm:col-span-3"
                 placeholder="CUST001"
+                disabled={isUpdating}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
@@ -847,6 +919,7 @@ export default function TicketsKanban() {
                 }
                 className="sm:col-span-3"
                 placeholder="DEV001"
+                disabled={isUpdating}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
@@ -866,6 +939,7 @@ export default function TicketsKanban() {
                   }))
                 }
                 className="sm:col-span-3 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isUpdating}
               >
                 <option value="OPEN">Open</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -891,6 +965,7 @@ export default function TicketsKanban() {
                 className="sm:col-span-3"
                 placeholder="Describe the issue..."
                 rows={3}
+                disabled={isUpdating}
               />
             </div>
 
@@ -947,6 +1022,13 @@ export default function TicketsKanban() {
             )}
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            {/* Status indicator for changes */}
+            {hasTicketChanged() && (
+              <div className="flex items-center text-xs text-amber-600 dark:text-amber-400 mb-2 sm:mb-0">
+                <div className="w-2 h-2 bg-amber-500 rounded-full mr-1 animate-pulse"></div>
+                Unsaved changes
+              </div>
+            )}
             <Button
               variant="destructive"
               onClick={() => {
@@ -954,6 +1036,7 @@ export default function TicketsKanban() {
                 setIsDeleteDialogOpen(true);
               }}
               className="w-full sm:w-auto"
+              disabled={isUpdating}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Ticket
@@ -962,9 +1045,19 @@ export default function TicketsKanban() {
               type="submit"
               onClick={updateTicket}
               className="w-full sm:w-auto"
+              disabled={!hasTicketChanged() || isUpdating}
             >
-              <Edit className="mr-2 h-4 w-4" />
-              Update Ticket
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Update Ticket
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
