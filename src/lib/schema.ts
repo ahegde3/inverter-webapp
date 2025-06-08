@@ -125,6 +125,8 @@ export const customerUpdateSchema = z.object({
   emailId: z.string().email().optional(),
   phoneNo: z.string().optional(),
   address: z.string().min(1).optional(),
+  state: z.string().optional(),
+  dateOfBirth: z.string().optional(),
 });
 
 export type CustomerUpdate = z.infer<typeof customerUpdateSchema>;

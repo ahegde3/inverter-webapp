@@ -167,7 +167,6 @@ export default function TicketsKanban() {
       setIsLoading(true);
       setError(null);
 
-      console.log("Fetching tickets from API...");
 
       const response = await fetch("/api/customer/ticket", {
         method: "GET",
@@ -181,7 +180,7 @@ export default function TicketsKanban() {
       }
 
       const result = await response.json();
-      console.log("API Response:", result);
+
 
       if (result.success) {
         const fetchedTickets = result.tickets || [];
@@ -203,7 +202,6 @@ export default function TicketsKanban() {
           };
         });
 
-        console.log(`Loaded ${validatedTickets.length} tickets from database`);
 
         // Log status distribution for debugging
         const statusCount = validatedTickets.reduce(
