@@ -13,6 +13,9 @@ export const UserRegistrationSchema = z.object({
   phoneNo: z.string().optional(),
   address: z.string().min(1, "Address is required").max(200),
   password: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  state: z.string().optional(),
+
   role: z
     .enum([UserRole.CUSTOMER, UserRole.ADMIN, UserRole.TECHNICIAN])
     .default(UserRole.CUSTOMER),

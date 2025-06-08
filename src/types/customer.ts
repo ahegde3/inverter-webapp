@@ -3,6 +3,9 @@ export interface CustomerData {
   firstName: string;
   lastName: string;
   emailId: string;
+  phoneNo: string;
+  dateOfBirth: string;
+  state: string;
   address: string;
   createdAt: string;
   updatedAt: string;

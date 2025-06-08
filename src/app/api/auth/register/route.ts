@@ -12,7 +12,7 @@ export const dynamic = "force-static";
 export async function POST(request: NextRequest): Promise<Response> {
   try {
     const body = await request.json();
-    if (body.password) body.password = "Testing";
+    if (!body.password) body.password = "Testing";
 
     body.password = encryptPassword(body.password);
 

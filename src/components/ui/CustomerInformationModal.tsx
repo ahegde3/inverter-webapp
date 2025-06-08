@@ -8,6 +8,25 @@ import { Button } from "@/components/ui/button";
 import type { CustomerData } from "@/types/customer";
 import type { Device } from "@/lib/schema";
 
+// Utility function to convert date formats
+function convertDateFormat(date: string, toHTML: boolean = false): string {
+  if (!date) return "";
+
+  try {
+    if (toHTML) {
+      // Convert from MM/DD/YYYY to YYYY-MM-DD
+      const [month, day, year] = date.split("/");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    } else {
+      // Convert from YYYY-MM-DD to MM/DD/YYYY
+      const [year, month, day] = date.split("-");
+      return `${month}/${day}/${year}`;
+    }
+  } catch {
+    return date; // Return original value if conversion fails
+  }
+}
+
 interface CustomerInformationModalProps {
   selectedCustomer: CustomerData | null;
   editableCustomer: CustomerData | null;
@@ -101,6 +120,50 @@ export default function CustomerInformationModal({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="phoneNo" className="text-right text-sm font-medium">
+              Phone No
+            </label>
+            <input
+              id="phoneNo"
+              type="phoneNo"
+              value={editableCustomer.phoneNo}
+              readOnly={!isEditable}
+              onChange={(e) =>
+                updateEditableCustomer("phoneNo", e.target.value)
+              }
+              className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                isEditable
+                  ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  : "bg-gray-50"
+              }`}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label
+              htmlFor="dateOfBirth"
+              className="text-right text-sm font-medium"
+            >
+              Date of Birth
+            </label>
+            <input
+              id="dateOfBirth"
+              type="date"
+              value={convertDateFormat(editableCustomer.dateOfBirth, true)}
+              readOnly={!isEditable}
+              onChange={(e) =>
+                updateEditableCustomer(
+                  "dateOfBirth",
+                  convertDateFormat(e.target.value)
+                )
+              }
+              className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                isEditable
+                  ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  : "bg-gray-50"
+              }`}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="address" className="text-right text-sm font-medium">
               Address
             </label>
@@ -113,6 +176,22 @@ export default function CustomerInformationModal({
               }
               rows={3}
               className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm resize-none ${
+                isEditable
+                  ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  : "bg-gray-50"
+              }`}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="state" className="text-right text-sm font-medium">
+              State
+            </label>
+            <textarea
+              id="state"
+              value={editableCustomer.state}
+              readOnly={!isEditable}
+              onChange={(e) => updateEditableCustomer("state", e.target.value)}
+              className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
                 isEditable
                   ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   : "bg-gray-50"

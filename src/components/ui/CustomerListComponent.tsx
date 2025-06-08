@@ -16,6 +16,7 @@ import { useCustomers } from "@/hooks/use-customers";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CustomerData } from "@/types/customer";
 import type { Device } from "@/lib/schema";
+import { useRouter } from "next/navigation";
 
 interface CustomerListComponentProps {
   selectedCustomerDetail: CustomerData | null;
@@ -26,6 +27,7 @@ export default function CustomerListComponent({
   selectedCustomerDetail,
   setSelectedCustomerDetail,
 }: CustomerListComponentProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -58,6 +60,7 @@ export default function CustomerListComponent({
 
   const handleCustomerClick = (customer: CustomerData | void) => {
     let canEdit: boolean = false;
+
     if (!customer) {
       customer = {
         userId: "",
@@ -65,15 +68,19 @@ export default function CustomerListComponent({
         lastName: "",
         emailId: "",
         address: "",
+        phoneNo: "",
+        dateOfBirth: "",
+        state: "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       canEdit = true;
-    }
+      setDeviceData(null);
+    } else getDeviceData();
     setIsCustomerAddition(canEdit);
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
-    getDeviceData();
+    // getDeviceData();
     setIsModalOpen(true);
     setIsEditable(canEdit);
   };
@@ -91,13 +98,15 @@ export default function CustomerListComponent({
       setIsEditable(false);
       // Refetch data to get updated list
       refetch();
+      router.refresh();
     }
   };
 
   const handleCancelEdit = () => {
+    setDeviceData(null);
     if (isCustomerAddition) {
       setIsCustomerAddition(false);
-      setDeviceData(null);
+      // setDeviceData(null);
       setIsModalOpen(false);
       return;
     }
@@ -118,10 +127,17 @@ export default function CustomerListComponent({
     if (!customerId) return;
     await deleteCustomer(customerId);
     setIsModalOpen(false);
+    router.refresh();
   };
 
   const getDeviceData = async () => {
     if (!selectedCustomerDetail) return;
+    console.log("Selected Customer Detail", isCustomerAddition);
+    if (isCustomerAddition) {
+      console.log("Customer is null");
+      setDeviceData(null);
+      return;
+    }
 
     try {
       const customerId = selectedCustomerDetail.userId;
@@ -135,6 +151,7 @@ export default function CustomerListComponent({
     } catch (err) {
       console.error("Error fetching devices:", err);
     }
+    router.refresh();
   };
 
   return (
