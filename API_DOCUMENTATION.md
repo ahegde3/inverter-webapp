@@ -305,3 +305,336 @@ curl -X POST "http://localhost:3000/api/device" \
 - Device IDs are automatically generated with the format "A" + timestamp + random characters
 - All request fields are required and must be non-empty strings
 - The system stores devices in DynamoDB with the partition key format `DEVICE#{deviceId}`
+
+## Support Ticket API
+
+### GET /api/customer/ticket
+
+Retrieves all support tickets from the system.
+
+#### Example Request
+
+```bash
+GET /api/customer/ticket
+```
+
+#### Response Format
+
+**Success Response (200)**
+
+```json
+{
+  "success": true,
+  "tickets": [
+    {
+      "ticketId": "TKT1ABC23DEF",
+      "customerId": "CUST001",
+      "deviceId": "DEV001",
+      "message": "Device not starting properly",
+      "status": "OPEN",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z",
+      "PK": "TICKET#TKT1ABC23DEF",
+      "SK": "DETAILS"
+    }
+  ]
+}
+```
+
+**Error Response (500)**
+
+```json
+{
+  "success": false,
+  "error": "Failed to fetch tickets from database"
+}
+```
+
+### POST /api/customer/ticket
+
+Creates a new support ticket.
+
+#### Request Body
+
+| Field        | Type   | Required | Description                                    |
+| ------------ | ------ | -------- | ---------------------------------------------- |
+| `customerId` | string | Yes      | ID of the customer creating the ticket         |
+| `deviceId`   | string | Yes      | ID of the device the ticket is about           |
+| `emailId`    | string | Yes      | Customer's email address                       |
+| `message`    | string | Yes      | Description of the issue (max 1000 characters) |
+
+#### Example Request
+
+```bash
+POST /api/customer/ticket
+Content-Type: application/json
+
+{
+  "customerId": "CUST001",
+  "deviceId": "DEV001", 
+  "emailId": "customer@example.com",
+  "message": "Device is not starting properly after the latest update"
+}
+```
+
+#### Response Format
+
+**Success Response (201)**
+
+```json
+{
+  "success": true,
+  "ticketId": "TKT1ABC23DEF",
+  "message": "Support ticket created successfully"
+}
+```
+
+**Error Response (400)**
+
+```json
+{
+  "success": false,
+  "error": "Validation error: Message is required"
+}
+```
+
+**Error Response (500)**
+
+```json
+{
+  "success": false,
+  "error": "Internal server error occurred while creating support ticket."
+}
+```
+
+### PUT /api/customer/ticket
+
+Updates an existing ticket. Supports both status-only updates and full ticket updates.
+
+#### Request Body (Status Update Only)
+
+| Field      | Type   | Required | Description                           |
+| ---------- | ------ | -------- | ------------------------------------- |
+| `ticketId` | string | Yes      | ID of the ticket to update            |
+| `status`   | string | Yes      | New status: "OPEN", "IN_PROGRESS", "COMPLETED" |
+
+#### Request Body (Full Update)
+
+| Field        | Type   | Required | Description                                    |
+| ------------ | ------ | -------- | ---------------------------------------------- |
+| `ticketId`   | string | Yes      | ID of the ticket to update                     |
+| `customerId` | string | Yes      | Updated customer ID                            |
+| `deviceId`   | string | Yes      | Updated device ID                              |
+| `message`    | string | Yes      | Updated issue description (max 1000 characters) |
+| `status`     | string | Yes      | Updated status: "OPEN", "IN_PROGRESS", "COMPLETED" |
+
+#### Example Requests
+
+##### Status Update Only
+
+```bash
+PUT /api/customer/ticket
+Content-Type: application/json
+
+{
+  "ticketId": "TKT1ABC23DEF",
+  "status": "IN_PROGRESS"
+}
+```
+
+##### Full Ticket Update
+
+```bash
+PUT /api/customer/ticket
+Content-Type: application/json
+
+{
+  "ticketId": "TKT1ABC23DEF",
+  "customerId": "CUST001",
+  "deviceId": "DEV001",
+  "message": "Updated: Device is not starting properly. Customer reports intermittent power issues.",
+  "status": "IN_PROGRESS"
+}
+```
+
+#### Response Format
+
+**Success Response - Status Update (200)**
+
+```json
+{
+  "success": true,
+  "message": "Ticket status updated successfully",
+  "ticket": {
+    "ticketId": "TKT1ABC23DEF",
+    "status": "IN_PROGRESS",
+    "updatedAt": "2024-01-15T11:30:00Z"
+  }
+}
+```
+
+**Success Response - Full Update (200)**
+
+```json
+{
+  "success": true,
+  "message": "Ticket updated successfully",
+  "ticket": {
+    "ticketId": "TKT1ABC23DEF",
+    "customerId": "CUST001",
+    "deviceId": "DEV001",
+    "message": "Updated: Device is not starting properly. Customer reports intermittent power issues.",
+    "status": "IN_PROGRESS",
+    "updatedAt": "2024-01-15T11:30:00Z"
+  }
+}
+```
+
+**Error Response (400)**
+
+```json
+{
+  "success": false,
+  "error": "Validation error: Ticket ID is required"
+}
+```
+
+**Error Response (404)**
+
+```json
+{
+  "success": false,
+  "error": "Ticket not found"
+}
+```
+
+**Error Response (500)**
+
+```json
+{
+  "success": false,
+  "error": "Failed to update ticket"
+}
+```
+
+#### HTTP Status Codes
+
+- `200 OK` - Ticket successfully retrieved/updated
+- `201 Created` - Ticket successfully created
+- `400 Bad Request` - Invalid request body or validation error
+- `404 Not Found` - Ticket not found (for updates)
+- `500 Internal Server Error` - Server error
+
+#### Ticket Status Values
+
+| Status        | Description                                          |
+| ------------- | ---------------------------------------------------- |
+| `OPEN`        | Ticket is newly created and waiting to be addressed |
+| `IN_PROGRESS` | Ticket is being actively worked on                  |
+| `COMPLETED`   | Ticket has been resolved and closed                 |
+
+#### Usage Examples
+
+##### JavaScript/TypeScript
+
+```typescript
+// Create a new ticket
+const ticketData = {
+  customerId: "CUST001",
+  deviceId: "DEV001",
+  emailId: "customer@example.com",
+  message: "Device is not starting properly"
+};
+
+const createResponse = await fetch("/api/customer/ticket", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(ticketData),
+});
+
+const createResult = await createResponse.json();
+
+// Get all tickets
+const getResponse = await fetch("/api/customer/ticket");
+const getResult = await getResponse.json();
+
+// Update ticket status
+const statusUpdate = {
+  ticketId: "TKT1ABC23DEF",
+  status: "IN_PROGRESS"
+};
+
+const statusResponse = await fetch("/api/customer/ticket", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(statusUpdate),
+});
+
+// Update complete ticket details
+const fullUpdate = {
+  ticketId: "TKT1ABC23DEF",
+  customerId: "CUST001",
+  deviceId: "DEV001", 
+  message: "Updated issue description with more details",
+  status: "IN_PROGRESS"
+};
+
+const fullResponse = await fetch("/api/customer/ticket", {
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(fullUpdate),
+});
+```
+
+##### cURL
+
+```bash
+# Create a ticket
+curl -X POST "http://localhost:3000/api/customer/ticket" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "CUST001",
+    "deviceId": "DEV001",
+    "emailId": "customer@example.com", 
+    "message": "Device is not starting properly"
+  }'
+
+# Get all tickets
+curl "http://localhost:3000/api/customer/ticket"
+
+# Update ticket status only
+curl -X PUT "http://localhost:3000/api/customer/ticket" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ticketId": "TKT1ABC23DEF",
+    "status": "IN_PROGRESS"
+  }'
+
+# Update complete ticket details  
+curl -X PUT "http://localhost:3000/api/customer/ticket" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ticketId": "TKT1ABC23DEF",
+    "customerId": "CUST001",
+    "deviceId": "DEV001",
+    "message": "Updated issue description with more details",
+    "status": "IN_PROGRESS"
+  }'
+```
+
+#### Notes
+
+- Ticket IDs are automatically generated with the format "TKT" + timestamp + random characters
+- The API automatically determines between status-only updates and full updates based on the fields provided
+- Status values are normalized and validated on both frontend and backend
+- All tickets are stored in DynamoDB with the partition key format `TICKET#{ticketId}`
+- Timestamps are in ISO 8601 format (UTC)
+- The message field has a maximum length of 1000 characters
+- When updating status only, other ticket fields remain unchanged
+- When performing full updates, all fields (customerId, deviceId, message, status) must be provided
