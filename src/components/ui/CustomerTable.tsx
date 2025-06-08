@@ -106,12 +106,7 @@ export default function CustomerTable() {
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
     setIsModalOpen(true);
-    setIsEditable(false);
     getDeviceData(customer.userId);
-  };
-
-  const handleEditClick = () => {
-    setIsEditable(true);
   };
 
   const handleSaveClick = async () => {
@@ -137,7 +132,7 @@ export default function CustomerTable() {
         )
       );
       setSelectedCustomer(editableCustomer);
-      setIsEditable(false);
+      setIsModalOpen(false); // Close modal after successful save
       await fetchCustomers(); // Refresh the list
     } catch (error) {
       console.error("Error updating customer:", error);
@@ -147,9 +142,40 @@ export default function CustomerTable() {
     }
   };
 
+  const deleteCustomer = async (customerId: string): Promise<void> => {
+    if (!customerId) return;
+
+    try {
+      const response = await fetch(`/api/customer?customer_id=${customerId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Failed to delete customer");
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+      console.error("Error deleting customer:", err);
+    }
+  };
+
   const handleCancelEdit = () => {
     setEditableCustomer(selectedCustomer);
-    setIsEditable(false);
+    setIsModalOpen(false);
   };
 
   const updateEditableCustomer = (field: keyof CustomerData, value: string) => {
@@ -359,6 +385,7 @@ export default function CustomerTable() {
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0 text-destructive"
+                            onClick={() => deleteCustomer(customer.userId)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -459,7 +486,7 @@ export default function CustomerTable() {
           handleCustomerDelete={handleCustomerDelete}
           handleCancelEdit={handleCancelEdit}
           handleSaveClick={handleSaveClick}
-          handleEditClick={handleEditClick}
+          handleEditClick={() => {}}
         />
       </Dialog>
     </div>

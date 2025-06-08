@@ -160,10 +160,7 @@ export const deleteUserById = async (customerId: string) => {
         PK: `USER#${customerId}`,
         SK: "PROFILE",
       },
-      ConditionExpression: "userId = :userId",
-      ExpressionAttributeValues: {
-        ":userId": customerId,
-      },
+      ConditionExpression: "attribute_exists(PK)",
       ReturnValues: "ALL_OLD",
     });
 
