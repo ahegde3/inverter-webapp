@@ -226,7 +226,7 @@ export default function CustomerInformationModal({
                   <div className="grid grid-cols-4 items-center gap-4">
                     <label
                       htmlFor={`manufacturingDate-${index}`}
-                      className="text-right text-sm font-medium"
+                      className="text-right text-sm font-medium -ml-2"
                     >
                       Manufacturing Date
                     </label>

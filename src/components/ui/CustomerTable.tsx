@@ -40,8 +40,6 @@ export default function CustomerTable() {
       setIsLoading(true);
       setError(null);
 
-
-
       const response = await fetch("/api/customer", {
         method: "GET",
         headers: {
@@ -55,10 +53,8 @@ export default function CustomerTable() {
 
       const result: CustomerApiResponse = await response.json();
 
-
       if (result.success && "data" in result) {
         setCustomers(result.data || []);
-
       } else {
         throw new Error(
           "error" in result ? result.error : "Failed to fetch customers"
@@ -317,9 +313,9 @@ export default function CustomerTable() {
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       Address
                     </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                    {/* <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       Created
-                    </th>
+                    </th> */}
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       Actions
                     </th>
@@ -360,14 +356,14 @@ export default function CustomerTable() {
                           </span>
                         </div>
                       </td>
-                      <td className="h-16 px-4 align-middle">
+                      {/* <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">
                             {formatDate(customer.createdAt)}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
                       <td className="h-16 px-4 align-middle">
                         <div className="flex items-center gap-2">
                           <Button

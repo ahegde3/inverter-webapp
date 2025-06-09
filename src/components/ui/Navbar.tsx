@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import ProfileIcon from "./ProfileIcon";
-import { ThemeToggle } from "../theme-toggle";
+// import { ThemeToggle } from "../theme-toggle";
 import { TabName } from "@/types/navigation";
 
 interface NavbarProps {
@@ -43,7 +43,7 @@ export function Navbar({ tabList, currentTab, onTabChange }: NavbarProps) {
             {tab}
           </button>
         ))}
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
         <ProfileIcon />
       </div>
     </nav>
