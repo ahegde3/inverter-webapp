@@ -107,13 +107,16 @@ export default function CustomerTable() {
     if (!editableCustomer) return;
 
     try {
-      const response = await fetch(`/api/customer/${editableCustomer.userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editableCustomer),
-      });
+      const response = await fetch(
+        `/api/customer?customer_id=${editableCustomer.userId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editableCustomer),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update customer");
