@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 
 export const description = "An interactive area chart";
 
@@ -152,6 +154,28 @@ export function Component() {
     });
   }, [timeRange]);
 
+  function downloadCSV() {
+    const headers = ["Date", "Load Generation (MW)", "Load Consumption (MW)"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredData.map(
+        (item) => `${item.date},${item.loadGeneration},${item.loadConsumption}`
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `load-data-${timeRange}.csv`);
+    link.style.visibility = "hidden";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <Card>
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
@@ -192,6 +216,14 @@ export function Component() {
               </SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={downloadCSV}
+            title="Download CSV"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
