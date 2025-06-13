@@ -24,7 +24,7 @@ export function SectionCards() {
           <CardTitle className="text-lg sm:text-xl md:text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             4.2{" "}
             <span className="text-sm sm:text-base md:text-lg font-normal">
-              kW
+              kW/h
             </span>
           </CardTitle>
           <CardAction>

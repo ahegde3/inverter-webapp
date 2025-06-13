@@ -43,7 +43,13 @@ export async function POST(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    const { customerId, deviceId, message } = validationResult.data;
+    const {
+      customerId,
+      deviceId,
+      message,
+      assignedTo = "",
+      note = "",
+    } = validationResult.data;
 
     // // Verify that the customer exists
     // console.log("Verifying customer with customerId:", customerId);
@@ -119,6 +125,8 @@ export async function POST(
       customerId,
       deviceId,
       message,
+      assignedTo,
+      note,
       status: "OPEN",
       createdAt: currentTimestamp,
       updatedAt: currentTimestamp,
@@ -211,12 +219,14 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
           );
           normalizedStatus = "OPEN";
       }
-
+      console.log("item", item);
       return {
         ticketId: item.ticketId,
         customerId: item.customerId,
         deviceId: item.deviceId,
         message: item.message,
+        assignedTo: item.assignedTo,
+        note: item.note,
         status: normalizedStatus,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -280,7 +290,8 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 400 });
       }
 
-      const { ticketId, customerId, deviceId, message, status } = validationResult.data;
+      const { ticketId, customerId, deviceId, message, status } =
+        validationResult.data;
 
       console.log(`Updating complete ticket details for ${ticketId}`);
 
@@ -291,7 +302,8 @@ export async function PUT(
           PK: `TICKET#${ticketId}`,
           SK: "DETAILS",
         },
-        UpdateExpression: "SET customerId = :customerId, deviceId = :deviceId, message = :message, #status = :status, updatedAt = :updatedAt",
+        UpdateExpression:
+          "SET customerId = :customerId, deviceId = :deviceId, message = :message, #status = :status, updatedAt = :updatedAt",
         ExpressionAttributeNames: {
           "#status": "status",
         },
@@ -388,7 +400,9 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 500 });
       }
 
-      console.log(`Successfully updated ticket ${ticketId} to status ${status}`);
+      console.log(
+        `Successfully updated ticket ${ticketId} to status ${status}`
+      );
 
       const successResponse = {
         success: true,
@@ -440,6 +454,8 @@ export async function PUT(
 interface DynamoDBTicket {
   ticketId: string;
   customerId: string;
+  assignedTo: string;
+  note: string;
   deviceId: string;
   message: string;
   status: string;

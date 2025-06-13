@@ -4,6 +4,8 @@ export const ticketCreateSchema = z.object({
   customerId: z.string().min(1, "Customer ID is required"),
   deviceId: z.string().min(1, "Device ID is required"),
   emailId: z.string(),
+  assignedTo: z.string().optional(),
+  note: z.string().optional(),
   message: z
     .string()
     .min(1, "Message is required")
@@ -23,6 +25,8 @@ export const ticketSchema = z.object({
   customerId: z.string(),
   deviceId: z.string(),
   message: z.string(),
+  assignedTo: z.string(),
+  note: z.string(),
   status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -47,11 +51,13 @@ export const ticketUpdateSchema = z.object({
 export const ticketUpdateResponseSchema = z.object({
   success: z.boolean(),
   message: z.string().optional(),
-  ticket: z.object({
-    ticketId: z.string(),
-    status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
-    updatedAt: z.string(),
-  }).optional(),
+  ticket: z
+    .object({
+      ticketId: z.string(),
+      status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
+      updatedAt: z.string(),
+    })
+    .optional(),
   error: z.string().optional(),
 });
 
@@ -60,7 +66,10 @@ export const ticketFullUpdateSchema = z.object({
   ticketId: z.string().min(1, "Ticket ID is required"),
   customerId: z.string().min(1, "Customer ID is required"),
   deviceId: z.string().min(1, "Device ID is required"),
-  message: z.string().min(1, "Message is required").max(1000, "Message is too long"),
+  message: z
+    .string()
+    .min(1, "Message is required")
+    .max(1000, "Message is too long"),
   status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
 });
 
@@ -68,14 +77,16 @@ export const ticketFullUpdateSchema = z.object({
 export const ticketFullUpdateResponseSchema = z.object({
   success: z.boolean(),
   message: z.string().optional(),
-  ticket: z.object({
-    ticketId: z.string(),
-    customerId: z.string(),
-    deviceId: z.string(),
-    message: z.string(),
-    status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
-    updatedAt: z.string(),
-  }).optional(),
+  ticket: z
+    .object({
+      ticketId: z.string(),
+      customerId: z.string(),
+      deviceId: z.string(),
+      message: z.string(),
+      status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
+      updatedAt: z.string(),
+    })
+    .optional(),
   error: z.string().optional(),
 });
 
@@ -86,4 +97,6 @@ export type TicketsGetResponse = z.infer<typeof ticketsGetResponseSchema>;
 export type TicketUpdate = z.infer<typeof ticketUpdateSchema>;
 export type TicketUpdateResponse = z.infer<typeof ticketUpdateResponseSchema>;
 export type TicketFullUpdate = z.infer<typeof ticketFullUpdateSchema>;
-export type TicketFullUpdateResponse = z.infer<typeof ticketFullUpdateResponseSchema>;
+export type TicketFullUpdateResponse = z.infer<
+  typeof ticketFullUpdateResponseSchema
+>;
