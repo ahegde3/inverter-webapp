@@ -58,7 +58,7 @@ export default function ProfileIcon() {
             {userData && userData.role === "SUPER_ADMIN" && (
               <Button
                 variant="ghost"
-                className="flex items-center justify-start"
+                className="flex items-center justify-start cursor-pointer"
                 onClick={() => setIsDialogOpen(true)}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
@@ -67,7 +67,7 @@ export default function ProfileIcon() {
             )}
             <Button
               variant="ghost"
-              className="flex items-center justify-start"
+              className="flex items-center justify-start cursor-pointer"
               onClick={handleLogout}
             >
               <LogOut className="mr-2 h-4 w-4" />

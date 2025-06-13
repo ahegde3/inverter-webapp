@@ -175,6 +175,7 @@ export interface Device {
   serialNo: string;
   deviceType: string;
   manufacturingDate: string;
+  warrantyStartDate: string;
   warrantyEndDate: string;
   customerId: string;
   createdAt: string;
@@ -186,6 +187,7 @@ export const deviceSchema = z.object({
   serialNo: z.string(),
   deviceType: z.string(),
   manufacturingDate: z.string(),
+  warrantyStartDate: z.string(),
   warrantyEndDate: z.string(),
   customerId: z.string(),
   createdAt: z.string(),

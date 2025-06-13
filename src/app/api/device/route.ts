@@ -181,6 +181,7 @@ export async function GET(
       serialNo: item.serialNo,
       deviceType: item.deviceType,
       manufacturingDate: item.manufacturingDate,
+      warrantyStartDate: item.warrantyStartDate,
       warrantyEndDate: item.warrantyEndDate,
       customerId: item.customerId,
       createdAt: item.createdAt,
