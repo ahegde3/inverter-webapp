@@ -4,8 +4,11 @@ export const ticketCreateSchema = z.object({
   customerId: z.string().min(1, "Customer ID is required"),
   deviceId: z.string().min(1, "Device ID is required"),
   emailId: z.string(),
-  assignedTo: z.string().optional(),
-  note: z.string().optional(),
+  assignedTo: z.string().min(1, "Assigned To is required"),
+  notes: z.array(z.object({
+    content: z.string(),
+    createdAt: z.string().optional(),
+  })).optional(),
   message: z
     .string()
     .min(1, "Message is required")
@@ -26,7 +29,10 @@ export const ticketSchema = z.object({
   deviceId: z.string(),
   message: z.string(),
   assignedTo: z.string(),
-  note: z.string(),
+  notes: z.array(z.object({
+    content: z.string(),
+    createdAt: z.string().optional(),
+  })).optional(),
   status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -71,6 +77,11 @@ export const ticketFullUpdateSchema = z.object({
     .min(1, "Message is required")
     .max(1000, "Message is too long"),
   status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
+  assignedTo: z.string().min(1, "Assigned To is required"),
+  notes: z.array(z.object({
+    content: z.string(),
+    createdAt: z.string().optional(),
+  })).optional(),
 });
 
 // Schema for complete ticket update response
@@ -84,6 +95,11 @@ export const ticketFullUpdateResponseSchema = z.object({
       deviceId: z.string(),
       message: z.string(),
       status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
+      assignedTo: z.string(),
+      notes: z.array(z.object({
+        content: z.string(),
+        createdAt: z.string().optional(),
+      })).optional(),
       updatedAt: z.string(),
     })
     .optional(),
