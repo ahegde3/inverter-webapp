@@ -314,7 +314,10 @@ export default function CustomerTable() {
                       Email
                     </th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Address
+                      City
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      State
                     </th>
                     {/* <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       Created
@@ -355,7 +358,15 @@ export default function CustomerTable() {
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm max-w-xs truncate">
-                            {customer.address}
+                            {customer.city}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="h-16 px-4 align-middle">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm max-w-xs truncate">
+                            {customer.state}
                           </span>
                         </div>
                       </td>

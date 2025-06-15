@@ -71,6 +71,7 @@ export default function CustomerListComponent({
         phoneNo: "",
         dateOfBirth: "",
         state: "",
+        city: "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

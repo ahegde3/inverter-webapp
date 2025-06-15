@@ -6,6 +6,7 @@ export interface CustomerData {
   phoneNo: string;
   dateOfBirth: string;
   state: string;
+  city: string;
   address: string;
   createdAt: string;
   updatedAt: string;
