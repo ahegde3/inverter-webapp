@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -30,7 +29,6 @@ import {
   ChevronRight,
   Edit,
   Trash2,
-  Clock,
   RefreshCw,
 } from "lucide-react";
 import { type Ticket } from "@/lib/schema/ticket";
