@@ -77,11 +77,13 @@ export default function CustomerListComponent({
       };
       canEdit = true;
       setDeviceData(null);
-    } else getDeviceData();
+    } else {
+      // Fetch device data for the selected customer
+      fetchDeviceData(customer.userId);
+    }
     setIsCustomerAddition(canEdit);
     setSelectedCustomer(customer);
     setEditableCustomer(customer);
-    // getDeviceData();
     setIsModalOpen(true);
     setIsEditable(canEdit);
   };
@@ -131,17 +133,10 @@ export default function CustomerListComponent({
     router.refresh();
   };
 
-  const getDeviceData = async () => {
-    if (!selectedCustomerDetail) return;
-
-    if (isCustomerAddition) {
-
-      setDeviceData(null);
-      return;
-    }
+  const fetchDeviceData = async (customerId: string) => {
+    if (!customerId) return;
 
     try {
-      const customerId = selectedCustomerDetail.userId;
       const response = await fetch(`/api/device?customer_id=${customerId}`);
 
       if (!response.ok) {
@@ -152,7 +147,6 @@ export default function CustomerListComponent({
     } catch (err) {
       console.error("Error fetching devices:", err);
     }
-    router.refresh();
   };
 
   return (
@@ -231,7 +225,11 @@ export default function CustomerListComponent({
                       ? "bg-blue-50 hover:bg-blue-100"
                       : "hover:bg-gray-50"
                   }`}
-                  onClick={() => setSelectedCustomerDetail(customer)}
+                  onClick={() => {
+                    setSelectedCustomerDetail(customer);
+                    // Fetch device data when selecting a customer from the list
+                    fetchDeviceData(customer.userId);
+                  }}
                 >
                   <div className="flex items-center justify-between p-2">
                     <div className="text-sm">{`${customer.firstName} ${customer.lastName}`}</div>
