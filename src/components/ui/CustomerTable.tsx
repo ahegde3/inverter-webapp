@@ -159,7 +159,8 @@ export default function CustomerTable() {
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.address.toLowerCase().includes(searchQuery.toLowerCase());
+      customer.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.userId.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCity =
       cityFilter === undefined ||

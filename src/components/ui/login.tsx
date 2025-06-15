@@ -42,8 +42,6 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
       const data: LoginResponseSchema = await response.json();
 
       if (data.success && data.data && data.data.user.role.includes("ADMIN")) {
-
-
         // Set token in an HTTP-only cookie
         document.cookie = `token=${data.data.token}; path=/; max-age=86400; samesite=strict; secure`;
 
@@ -71,11 +69,8 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
         throw new Error("Please fill in all fields");
       }
 
-
-
       // Call the login API with encrypted password
-     await callLoginAPI(email, password);
-
+      await callLoginAPI(email, password);
 
       // Redirect to home page after successful login
       router.push("/home");
@@ -133,7 +128,7 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
               <Button
                 type="button"
                 variant="link"
-                className="text-sm text-gray-600 p-0 h-auto"
+                className="text-sm text-gray-600 p-0 h-auto cursor-pointer"
                 onClick={onForgotPasswordClick}
                 disabled={isLoading}
               >
@@ -153,7 +148,11 @@ export default function LoginPage({ onForgotPasswordClick }: LoginPageProps) {
             </div> */}
           </CardContent>
           <CardFooter className="pt-6">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full cursor-pointer"
+              disabled={isLoading}
+            >
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </CardFooter>

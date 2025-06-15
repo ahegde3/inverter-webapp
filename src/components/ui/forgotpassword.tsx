@@ -92,14 +92,14 @@ export default function ForgotPasswordPage({
           <Button
             type="button"
             variant="link"
-            className="text-sm text-gray-600 px-6 h-auto"
+            className="text-sm text-gray-600 px-6 h-auto cursor-pointer"
             onClick={onBackToLogin}
             // disabled={isLoading}
           >
             Sign in?
           </Button>
           <CardFooter className="pt-6">
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full cursor-pointer">
               Reset Password
             </Button>
           </CardFooter>
