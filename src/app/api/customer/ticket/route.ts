@@ -47,8 +47,8 @@ export async function POST(
       customerId,
       deviceId,
       message,
-      assignedTo = "",
-      note = "",
+      assignedTo,
+      notes,
     } = validationResult.data;
 
 
@@ -65,7 +65,7 @@ export async function POST(
       deviceId,
       message,
       assignedTo,
-      note,
+      notes: notes || [],
       status: "OPEN",
       createdAt: currentTimestamp,
       updatedAt: currentTimestamp,
@@ -158,13 +158,16 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
           normalizedStatus = "OPEN";
       }
 
+      // Convert note to notes array format
+      const notes = item.note ? [{ content: item.note }] : [];
+
       return {
         ticketId: item.ticketId,
         customerId: item.customerId,
         deviceId: item.deviceId,
         message: item.message,
         assignedTo: item.assignedTo,
-        note: item.note,
+        notes,
         status: normalizedStatus,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -209,13 +212,26 @@ export async function PUT(
 ): Promise<NextResponse<TicketUpdateResponse | TicketFullUpdateResponse>> {
   try {
     const body = await request.json();
+    const ticketId = request.nextUrl.searchParams.get("ticketId");
+
+    if (!ticketId) {
+      const errorResponse = {
+        success: false,
+        error: "Ticket ID is required",
+      };
+      const validatedErrorResponse = ticketUpdateResponseSchema.parse(errorResponse);
+      return NextResponse.json(validatedErrorResponse, { status: 400 });
+    }
 
     // Determine if this is a full update or status-only update
     const isFullUpdate = body.customerId || body.deviceId || body.message;
 
     if (isFullUpdate) {
       // Handle full ticket update
-      const validationResult = ticketFullUpdateSchema.safeParse(body);
+      const validationResult = ticketFullUpdateSchema.safeParse({
+        ...body,
+        ticketId,
+      });
 
       if (!validationResult.success) {
         const errorResponse = {
@@ -228,7 +244,7 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 400 });
       }
 
-      const { ticketId, customerId, deviceId, message, status } =
+      const { customerId, deviceId, message, status, assignedTo, notes } =
         validationResult.data;
 
 
@@ -240,7 +256,7 @@ export async function PUT(
           SK: "DETAILS",
         },
         UpdateExpression:
-          "SET customerId = :customerId, deviceId = :deviceId, message = :message, #status = :status, updatedAt = :updatedAt",
+          "SET customerId = :customerId, deviceId = :deviceId, message = :message, #status = :status, assignedTo = :assignedTo, note = :note, updatedAt = :updatedAt",
         ExpressionAttributeNames: {
           "#status": "status",
         },
@@ -249,6 +265,8 @@ export async function PUT(
           ":deviceId": deviceId,
           ":message": message,
           ":status": status,
+          ":assignedTo": assignedTo,
+          ":note": notes?.[0]?.content || "",
           ":updatedAt": new Date().toISOString(),
         },
         ConditionExpression: "attribute_exists(PK)",
@@ -278,6 +296,8 @@ export async function PUT(
           deviceId: result.Attributes.deviceId,
           message: result.Attributes.message,
           status: result.Attributes.status,
+          assignedTo: result.Attributes.assignedTo,
+          notes: result.Attributes.note ? [{ content: result.Attributes.note }] : [],
           updatedAt: result.Attributes.updatedAt,
         },
       };
@@ -286,8 +306,11 @@ export async function PUT(
         ticketFullUpdateResponseSchema.parse(successResponse);
       return NextResponse.json(validatedSuccessResponse, { status: 200 });
     } else {
-      // Handle status-only update (backward compatibility)
-      const validationResult = ticketUpdateSchema.safeParse(body);
+      // Handle status-only update
+      const validationResult = ticketUpdateSchema.safeParse({
+        ticketId,
+        status: body.status,
+      });
 
       if (!validationResult.success) {
         const errorResponse = {
@@ -300,7 +323,7 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 400 });
       }
 
-      const { ticketId, status } = validationResult.data;
+      const { status } = validationResult.data;
 
 
 
@@ -388,10 +411,10 @@ export async function PUT(
 interface DynamoDBTicket {
   ticketId: string;
   customerId: string;
-  assignedTo: string;
-  note: string;
   deviceId: string;
   message: string;
+  assignedTo: string;
+  note: string;
   status: string;
   createdAt: string;
   updatedAt: string;

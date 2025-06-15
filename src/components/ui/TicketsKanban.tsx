@@ -24,7 +24,7 @@ import {
 import {
   Plus,
   Calendar,
-  User,
+  User as UserIcon,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
@@ -34,6 +34,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { type Ticket } from "@/lib/schema/ticket";
+import { type User as UserType } from "@/lib/schema";
 
 // Create a simple textarea component inline to avoid import issues
 const Textarea = ({
@@ -141,23 +142,30 @@ export default function TicketsKanban() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<UserType[]>([]);
   const [newTicket, setNewTicket] = useState({
     customerId: "",
     deviceId: "",
     message: "",
-    emailId: "", // Add emailId field as required by API
+    emailId: "",
+    assignedTo: "",
+    notes: "",
   });
   const [editTicket, setEditTicket] = useState({
     customerId: "",
     deviceId: "",
     message: "",
-    status: "OPEN" as Ticket["status"], // Updated default
+    status: "OPEN" as Ticket["status"],
+    assignedTo: "",
+    notes: "",
   });
   const [originalTicket, setOriginalTicket] = useState({
     customerId: "",
     deviceId: "",
     message: "",
     status: "OPEN" as Ticket["status"],
+    assignedTo: "",
+    notes: "",
   });
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -234,6 +242,27 @@ export default function TicketsKanban() {
     fetchTickets();
   }, []);
 
+  // Fetch admin users
+  const fetchAdminUsers = async () => {
+    try {
+      const response = await fetch("/api/users?role=ADMIN");
+      if (!response.ok) {
+        throw new Error("Failed to fetch admin users");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setAdminUsers(data.users);
+      }
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+    }
+  };
+
+  // Fetch admin users on component mount
+  useEffect(() => {
+    fetchAdminUsers();
+  }, []);
+
   // Group tickets by status
   const groupedTickets = COLUMNS.reduce((acc, column) => {
     const ticketsForColumn = tickets.filter((ticket) => {
@@ -283,74 +312,51 @@ export default function TicketsKanban() {
   }, [tickets, groupedTickets]);
 
   // Update ticket status in backend
-  const updateTicketStatus = async (
-    ticketId: string,
-    newStatus: Ticket["status"]
-  ) => {
+  const handleStatusChange = async (ticketId: string, newStatus: Ticket["status"]) => {
     try {
-      console.log(`Updating ticket ${ticketId} status to ${newStatus}`);
-
-      const response = await fetch("/api/customer/ticket", {
+      const response = await fetch(`/api/customer/ticket?ticketId=${ticketId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          ticketId: ticketId,
           status: newStatus,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Failed to update ticket status");
       }
 
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || "Failed to update ticket status");
+      const data = await response.json();
+      if (data.success) {
+        // Update the ticket in the local state
+        setTickets((prevTickets) =>
+          prevTickets.map((ticket) =>
+            ticket.ticketId === ticketId
+              ? {
+                  ...ticket,
+                  status: newStatus,
+                  updatedAt: new Date().toISOString(),
+                }
+              : ticket
+          )
+        );
       }
-
-      console.log(`Successfully updated ticket ${ticketId} to ${newStatus}`);
-
-      // Update local state immediately for better UX
-      setTickets((prev) =>
-        prev.map((ticket) =>
-          ticket.ticketId === ticketId
-            ? {
-                ...ticket,
-                status: newStatus,
-                updatedAt: result.ticket.updatedAt || new Date().toISOString(),
-              }
-            : ticket
-        )
-      );
-
-      return result;
     } catch (error) {
       console.error("Error updating ticket status:", error);
-
-      // Show error message to user
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to update ticket status";
-      setError(`Error updating ticket: ${errorMessage}`);
-
-      throw error;
+      alert("Failed to update ticket status. Please try again.");
     }
   };
 
   // Handle drag and drop (enhanced with backend update)
   const moveTicket = async (ticketId: string, newStatus: Ticket["status"]) => {
     try {
-      await updateTicketStatus(ticketId, newStatus);
+      await handleStatusChange(ticketId, newStatus);
       await fetchTickets(); // Refresh tickets after update
     } catch (moveError) {
       console.error("Error moving ticket:", moveError);
-      setError(
-        moveError instanceof Error ? moveError.message : "Failed to move ticket"
-      );
+      alert("Failed to move ticket. Please try again.");
     }
   };
 
@@ -362,51 +368,18 @@ export default function TicketsKanban() {
       deviceId: ticket.deviceId,
       message: ticket.message,
       status: ticket.status,
+      assignedTo: ticket.assignedTo || "",
+      notes: ticket.notes?.[0]?.content || "",
     };
     setEditTicket(ticketData);
-    setOriginalTicket(ticketData); // Store original values for comparison
+    setOriginalTicket(ticketData);
     setIsEditDialogOpen(true);
   };
 
   // Create new ticket - Enhanced API connection
-  const createTicket = async () => {
+  const handleCreateTicket = async () => {
+    setIsCreating(true);
     try {
-      setIsCreating(true);
-      setError(null);
-
-      // Validate required fields
-      if (!newTicket.customerId.trim()) {
-        setError("Please enter a Customer ID");
-        return;
-      }
-      if (!newTicket.deviceId.trim()) {
-        setError("Please enter a Device ID");
-        return;
-      }
-      if (!newTicket.message.trim()) {
-        setError("Please enter a message describing the issue");
-        return;
-      }
-      if (!newTicket.emailId.trim()) {
-        setError("Please enter an email address");
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(newTicket.emailId)) {
-        setError("Please enter a valid email address");
-        return;
-      }
-
-      console.log("Creating ticket with data:", {
-        customerId: newTicket.customerId,
-        deviceId: newTicket.deviceId,
-        emailId: newTicket.emailId,
-        message: newTicket.message,
-      });
-
-      // Call your existing API exactly as it expects
       const response = await fetch("/api/customer/ticket", {
         method: "POST",
         headers: {
@@ -415,33 +388,21 @@ export default function TicketsKanban() {
         body: JSON.stringify({
           customerId: newTicket.customerId,
           deviceId: newTicket.deviceId,
-          emailId: newTicket.emailId,
           message: newTicket.message,
+          emailId: newTicket.emailId,
+          assignedTo: newTicket.assignedTo,
+          notes: newTicket.notes ? [{ content: newTicket.notes }] : undefined,
         }),
       });
 
-      console.log("API Response status:", response.status);
-
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Failed to create ticket");
       }
 
-      const result = await response.json();
-      console.log("API Response data:", result);
-
-      if (result.success) {
-        // Create ticket object matching the API structure
-        // const newTicketData: Ticket = {
-        //   ticketId: result.ticketId,
-        //   customerId: newTicket.customerId,
-        //   deviceId: newTicket.deviceId,
-        //   message: newTicket.message,
-        //   status: "OPEN", // API creates tickets with "OPEN" status
-        //   createdAt: new Date().toISOString(),
-        //   updatedAt: new Date().toISOString(),
-        //   PK: `TICKET#${result.ticketId}`,
-        //   SK: "DETAILS",
-        // };
+      const data = await response.json();
+      if (data.success) {
+        // Refresh the tickets list
+        await fetchTickets();
 
         // Reset form and close dialog
         setNewTicket({
@@ -449,35 +410,16 @@ export default function TicketsKanban() {
           deviceId: "",
           message: "",
           emailId: "",
+          assignedTo: "",
+          notes: "",
         });
         setIsCreateDialogOpen(false);
-
-        // Show success message
-        console.log("Ticket created successfully:", result.ticketId);
-
-        // Refresh tickets list from database
-        await fetchTickets();
-      } else {
-        // Handle API error response
-        const errorMessage = result.error || "Failed to create ticket";
-        setError(`Error: ${errorMessage}`);
-        console.error("API returned error:", result);
       }
-    } catch (createError) {
-      console.error("Error creating ticket:", createError);
-      setError(
-        createError instanceof Error
-          ? createError.message
-          : "Failed to create ticket"
-      );
+    } catch (error) {
+      console.error("Error creating ticket:", error);
+      alert("Failed to create ticket. Please try again.");
     } finally {
       setIsCreating(false);
-      setNewTicket({
-        customerId: "",
-        deviceId: "",
-        message: "",
-        emailId: "",
-      });
     }
   };
 
@@ -487,91 +429,83 @@ export default function TicketsKanban() {
       editTicket.customerId !== originalTicket.customerId ||
       editTicket.deviceId !== originalTicket.deviceId ||
       editTicket.message !== originalTicket.message ||
-      editTicket.status !== originalTicket.status
+      editTicket.status !== originalTicket.status ||
+      editTicket.assignedTo !== originalTicket.assignedTo ||
+      editTicket.notes !== originalTicket.notes
     );
   };
 
   // Update existing ticket
-  const updateTicket = async () => {
+  const handleUpdateTicket = async () => {
+    if (!selectedTicket) return;
+
+    setIsUpdating(true);
     try {
-      if (!selectedTicket) return;
-
-      if (
-        !editTicket.customerId.trim() ||
-        !editTicket.deviceId.trim() ||
-        !editTicket.message.trim()
-      ) {
-        setError("Please fill in all fields");
-        return;
-      }
-
-      setIsUpdating(true);
-      setError(null);
-
-      console.log("Updating ticket with data:", {
-        ticketId: selectedTicket.ticketId,
-        customerId: editTicket.customerId,
-        deviceId: editTicket.deviceId,
-        message: editTicket.message,
-        status: editTicket.status,
-      });
-
-      // Call the existing API endpoint for updating complete ticket details
-      const response = await fetch("/api/customer/ticket", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ticketId: selectedTicket.ticketId,
-          customerId: editTicket.customerId,
-          deviceId: editTicket.deviceId,
-          message: editTicket.message,
-          status: editTicket.status,
-        }),
-      });
+      const response = await fetch(
+        `/api/customer/ticket?ticketId=${selectedTicket.ticketId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerId: editTicket.customerId,
+            deviceId: editTicket.deviceId,
+            message: editTicket.message,
+            status: editTicket.status,
+            assignedTo: editTicket.assignedTo,
+            notes: editTicket.notes ? [{ content: editTicket.notes }] : undefined,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Failed to update ticket");
       }
 
-      const result = await response.json();
+      const data = await response.json();
+      if (data.success) {
+        // Update the ticket in the local state
+        setTickets((prevTickets) =>
+          prevTickets.map((ticket) =>
+            ticket.ticketId === selectedTicket.ticketId
+              ? {
+                  ...ticket,
+                  customerId: editTicket.customerId,
+                  deviceId: editTicket.deviceId,
+                  message: editTicket.message,
+                  status: editTicket.status,
+                  assignedTo: editTicket.assignedTo,
+                  notes: editTicket.notes ? [{ content: editTicket.notes }] : ticket.notes,
+                  updatedAt: new Date().toISOString(),
+                }
+              : ticket
+          )
+        );
 
-      if (!result.success) {
-        throw new Error(result.error || "Failed to update ticket");
+        // Close the dialog and reset form
+        setIsEditDialogOpen(false);
+        setSelectedTicket(null);
+        setEditTicket({
+          customerId: "",
+          deviceId: "",
+          message: "",
+          status: "OPEN",
+          assignedTo: "",
+          notes: "",
+        });
+        setOriginalTicket({
+          customerId: "",
+          deviceId: "",
+          message: "",
+          status: "OPEN",
+          assignedTo: "",
+          notes: "",
+        });
       }
-
-      console.log("Ticket updated successfully:", result);
-
-      // Update local state with the returned data
-      setTickets((prev) =>
-        prev.map((ticket) =>
-          ticket.ticketId === selectedTicket.ticketId
-            ? {
-                ...ticket,
-                customerId: result.ticket.customerId,
-                deviceId: result.ticket.deviceId,
-                message: result.ticket.message,
-                status: result.ticket.status,
-                updatedAt: result.ticket.updatedAt,
-              }
-            : ticket
-        )
-      );
-
-      setIsEditDialogOpen(false);
-      setSelectedTicket(null);
-
-      // Refresh tickets to ensure consistency
-      await fetchTickets();
-    } catch (updateError) {
-      console.error("Error updating ticket:", updateError);
-      setError(
-        updateError instanceof Error
-          ? updateError.message
-          : "Failed to update ticket"
-      );
-      // Error already set in setError above
+    } catch (error) {
+      console.error("Error updating ticket:", error);
+      alert("Failed to update ticket. Please try again.");
     } finally {
       setIsUpdating(false);
     }
@@ -789,6 +723,31 @@ export default function TicketsKanban() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="assignedTo" className="text-sm font-medium">
+                    Assign To
+                  </Label>
+                  <select
+                    id="assignedTo"
+                    value={newTicket.assignedTo}
+                    onChange={(e) =>
+                      setNewTicket((prev) => ({
+                        ...prev,
+                        assignedTo: e.target.value,
+                      }))
+                    }
+                    disabled={isCreating}
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Select an admin</option>
+                    {adminUsers.map((user) => (
+                      <option key={user.userId} value={user.userId}>
+                        {user.firstName} {user.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="message" className="text-sm font-medium">
                     Issue Description *
                   </Label>
@@ -823,6 +782,8 @@ export default function TicketsKanban() {
                         deviceId: "",
                         message: "",
                         emailId: "",
+                        assignedTo: "",
+                        notes: "",
                       });
                       setIsCreateDialogOpen(false);
                     }
@@ -834,7 +795,7 @@ export default function TicketsKanban() {
                 </Button>
                 <Button
                   type="submit"
-                  onClick={createTicket}
+                  onClick={handleCreateTicket}
                   className="w-full sm:w-auto"
                   disabled={isCreating}
                 >
@@ -944,6 +905,33 @@ export default function TicketsKanban() {
                 <option value="COMPLETED">Completed</option>
               </select>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-2 sm:gap-4">
+              <Label
+                htmlFor="edit-assignedTo"
+                className="sm:text-right font-medium"
+              >
+                Assign To
+              </Label>
+              <select
+                id="edit-assignedTo"
+                value={editTicket.assignedTo}
+                onChange={(e) =>
+                  setEditTicket((prev) => ({
+                    ...prev,
+                    assignedTo: e.target.value,
+                  }))
+                }
+                className="sm:col-span-3 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isUpdating}
+              >
+                <option value="">Select an admin</option>
+                {adminUsers.map((user) => (
+                  <option key={user.userId} value={user.userId}>
+                    {user.firstName} {user.lastName}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
               <Label
                 htmlFor="edit-message"
@@ -965,6 +953,29 @@ export default function TicketsKanban() {
                 rows={3}
                 disabled={isUpdating}
               />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-start gap-2 sm:gap-4">
+              <Label
+                htmlFor="edit-notes"
+                className="sm:text-right font-medium"
+              >
+                Notes
+              </Label>
+              <div className="sm:col-span-3">
+                <textarea
+                  id="edit-notes"
+                  value={editTicket.notes}
+                  onChange={(e) =>
+                    setEditTicket((prev) => ({
+                      ...prev,
+                      notes: e.target.value,
+                    }))
+                  }
+                  className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Add a note to this ticket..."
+                  disabled={isUpdating}
+                />
+              </div>
             </div>
 
             {/* Additional Information Section */}
@@ -1016,6 +1027,15 @@ export default function TicketsKanban() {
                     </div>
                   </div>
                 )}
+
+                {selectedTicket.assignedTo && (
+                  <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                    <UserIcon className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
+                    <span className="truncate">
+                      Assigned to: {adminUsers.find(u => u.userId === selectedTicket.assignedTo)?.firstName} {adminUsers.find(u => u.userId === selectedTicket.assignedTo)?.lastName}
+                    </span>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1041,7 +1061,7 @@ export default function TicketsKanban() {
             </Button>
             <Button
               type="submit"
-              onClick={updateTicket}
+              onClick={handleUpdateTicket}
               className="w-full sm:w-auto"
               disabled={!hasTicketChanged() || isUpdating}
             >
@@ -1168,32 +1188,46 @@ export default function TicketsKanban() {
                         </div>
                       </CardHeader>
                       <CardContent className="pt-0 p-1.5 sm:p-2 sm:pt-0">
-                        <CardDescription className="text-xs sm:text-sm mb-1 line-clamp-2">
-                          {ticket.message}
-                        </CardDescription>
-
-                        {/* Ticket Info - Condensed */}
-                        <div className="space-y-0.5">
-                          <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
-                            <User className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
-                            <span className="truncate">
+                        <div className="flex flex-col space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground">
                               {ticket.customerId}
                             </span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(ticket.createdAt)}
+                            </span>
                           </div>
-                          <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
-                            <MessageCircle className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
-                            <span className="truncate">{ticket.deviceId}</span>
-                          </div>
-                          <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
-                            <Calendar className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
-                            <span>{formatDate(ticket.createdAt)}</span>
-                          </div>
-                          {ticket.createdAt !== ticket.updatedAt && (
+                          <p className="text-sm line-clamp-2">{ticket.message}</p>
+                          <div className="space-y-0.5">
                             <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
-                              <Clock className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
-                              <span>{formatDate(ticket.updatedAt)}</span>
+                              <UserIcon className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
+                              <span className="truncate">
+                                {ticket.customerId}
+                              </span>
                             </div>
-                          )}
+                            {ticket.assignedTo && (
+                              <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                                <UserIcon className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
+                                <span className="truncate">
+                                  Assigned to: {adminUsers.find(u => u.userId === ticket.assignedTo)?.firstName} {adminUsers.find(u => u.userId === ticket.assignedTo)?.lastName}
+                                </span>
+                              </div>
+                            )}
+                            {ticket.notes && ticket.notes.length > 0 && (
+                              <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                                <MessageCircle className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
+                                <span className="truncate">
+                                  Note: {ticket.notes[0].content}
+                                </span>
+                              </div>
+                            )}
+                            {ticket.createdAt !== ticket.updatedAt && (
+                              <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                                <Calendar className="mr-1 h-2.5 w-2.5 flex-shrink-0" />
+                                <span>{formatDate(ticket.updatedAt)}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Quick action buttons - Compact */}
@@ -1209,13 +1243,13 @@ export default function TicketsKanban() {
                                     ? "IN_PROGRESS"
                                     : "OPEN";
                                 try {
-                                  await updateTicketStatus(
+                                  await handleStatusChange(
                                     ticket.ticketId,
                                     prevStatus as Ticket["status"]
                                   );
                                 } catch (error) {
                                   console.log("error", error);
-                                  // Error handling is already done in updateTicketStatus
+                                  // Error handling is already done in handleStatusChange
                                 }
                               }}
                               className="text-[10px] sm:text-xs flex-1 sm:flex-none p-0.5 sm:p-1 h-6 sm:h-7"
@@ -1235,13 +1269,13 @@ export default function TicketsKanban() {
                                     ? "IN_PROGRESS"
                                     : "COMPLETED";
                                 try {
-                                  await updateTicketStatus(
+                                  await handleStatusChange(
                                     ticket.ticketId,
                                     nextStatus as Ticket["status"]
                                   );
                                 } catch (error) {
                                   console.log("error", error);
-                                  // Error handling is already done in updateTicketStatus
+                                  // Error handling is already done in handleStatusChange
                                 }
                               }}
                               className="text-[10px] sm:text-xs flex-1 sm:flex-none p-0.5 sm:p-1 h-6 sm:h-7"
