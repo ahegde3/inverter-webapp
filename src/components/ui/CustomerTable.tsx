@@ -11,7 +11,6 @@ import {
   User,
   Mail,
   MapPin,
-  Calendar,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -19,12 +18,23 @@ import type { CustomerData, CustomerApiResponse } from "@/types/customer";
 import { Dialog } from "@/components/ui/dialog";
 import CustomerInformationModal from "./CustomerInformationModal";
 import type { Device } from "@/lib/schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { UserRegistrationSchema } from "@/types/auth";
+import type { CustomerErrorResponse } from "@/types/customer";
 
 export default function CustomerTable() {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState<string | undefined>(undefined);
+  const [stateFilter, setStateFilter] = useState<string | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerData | null>(
     null
@@ -33,6 +43,67 @@ export default function CustomerTable() {
     null
   );
   const [deviceData, setDeviceData] = useState<Device[] | null>(null);
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState<CustomerData>({
+    userId: "",
+    firstName: "",
+    lastName: "",
+    emailId: "",
+    phoneNo: "",
+    dateOfBirth: "",
+    address: "",
+    city: "",
+    state: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const addNewCustomer = async (body: object) => {
+    const validationResult = UserRegistrationSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      throw new Error(
+        validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ")
+      );
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationResult.data),
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? (data as CustomerErrorResponse).error
+            : "Failed to update customer"
+        );
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fetch customers from API
   const fetchCustomers = async () => {
@@ -76,25 +147,31 @@ export default function CustomerTable() {
     fetchCustomers();
   }, []);
 
-  // Filter customers based on search query
-  const filteredCustomers = customers.filter(
-    (customer) =>
+  // Get unique cities and states for filters
+  const uniqueCities = Array.from(new Set(customers.map((c) => c.city))).sort();
+  const uniqueStates = Array.from(
+    new Set(customers.map((c) => c.state))
+  ).sort();
+
+  // Filter customers based on search query, city and state filters
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesSearch =
       customer.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.emailId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      customer.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+    const matchesCity =
+      cityFilter === undefined ||
+      cityFilter === "all_cities" ||
+      customer.city === cityFilter;
+    const matchesState =
+      stateFilter === undefined ||
+      stateFilter === "all_states" ||
+      customer.state === stateFilter;
+
+    return matchesSearch && matchesCity && matchesState;
+  });
 
   const handleEditButtonClick = (customer: CustomerData) => {
     setSelectedCustomer(customer);
@@ -219,6 +296,52 @@ export default function CustomerTable() {
     }
   };
 
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCityFilter(undefined);
+    setStateFilter(undefined);
+  };
+
+  const handleAddCustomerClick = () => {
+    setIsAddingCustomer(true);
+    setNewCustomerData({
+      userId: "",
+      firstName: "",
+      lastName: "",
+      emailId: "",
+      phoneNo: "",
+      dateOfBirth: "",
+      address: "",
+      city: "",
+      state: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const handleCancelAddCustomer = () => {
+    setIsAddingCustomer(false);
+  };
+
+  const handleSaveNewCustomer = async () => {
+    try {
+      await addNewCustomer(newCustomerData);
+      setIsAddingCustomer(false);
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to add customer"
+      );
+    }
+  };
+
+  const updateNewCustomerData = (field: keyof CustomerData, value: string) => {
+    setNewCustomerData({
+      ...newCustomerData,
+      [field]: value,
+    });
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
@@ -256,6 +379,13 @@ export default function CustomerTable() {
 
         <div className="flex gap-2">
           <Button
+            onClick={handleAddCustomerClick}
+            className="flex items-center gap-2"
+          >
+            <User className="h-4 w-4" />
+            Add Customer
+          </Button>
+          <Button
             variant="outline"
             onClick={fetchCustomers}
             disabled={isLoading}
@@ -269,15 +399,57 @@ export default function CustomerTable() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search customers..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search customers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          <div className="w-40">
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by city" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_cities">All Cities</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-40">
+            <Select value={stateFilter} onValueChange={setStateFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Filter by state" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all_states">All States</SelectItem>
+                {uniqueStates.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(searchQuery || cityFilter || stateFilter) && (
+            <Button variant="ghost" onClick={clearFilters} className="h-10">
+              Clear filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Loading State */}
@@ -314,7 +486,10 @@ export default function CustomerTable() {
                       Email
                     </th>
                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Address
+                      City
+                    </th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                      State
                     </th>
                     {/* <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                       Created
@@ -355,7 +530,15 @@ export default function CustomerTable() {
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm max-w-xs truncate">
-                            {customer.address}
+                            {customer.city}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="h-16 px-4 align-middle">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm max-w-xs truncate">
+                            {customer.state}
                           </span>
                         </div>
                       </td>
@@ -396,11 +579,9 @@ export default function CustomerTable() {
                 <div className="text-center py-12 text-muted-foreground">
                   <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No customers found</p>
-                  {searchQuery && (
-                    <p className="text-sm mt-1">
-                      Try adjusting your search terms
-                    </p>
-                  )}
+                  <p className="text-sm mt-1">
+                    Try adjusting your search terms or filters
+                  </p>
                 </div>
               )}
             </div>
@@ -422,13 +603,19 @@ export default function CustomerTable() {
                       {customer.firstName} {customer.lastName}
                     </CardTitle>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleEditButtonClick(customer)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 text-destructive"
+                        onClick={() => deleteCustomer(customer.userId)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -442,11 +629,13 @@ export default function CustomerTable() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{customer.address}</span>
+                    <span>
+                      {customer.city}, {customer.state}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Created: {formatDate(customer.createdAt)}</span>
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{customer.address}</span>
                   </div>
                   <div className="pt-2">
                     <Badge variant="outline" className="text-xs">
@@ -461,16 +650,29 @@ export default function CustomerTable() {
               <div className="text-center py-12 text-muted-foreground">
                 <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No customers found</p>
-                {searchQuery && (
-                  <p className="text-sm mt-1">
-                    Try adjusting your search terms
-                  </p>
-                )}
+                <p className="text-sm mt-1">
+                  Try adjusting your search terms or filters
+                </p>
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Add Customer Modal */}
+      <Dialog open={isAddingCustomer} onOpenChange={setIsAddingCustomer}>
+        <CustomerInformationModal
+          selectedCustomer={newCustomerData}
+          editableCustomer={newCustomerData}
+          deviceData={null}
+          isEditable={true}
+          updateEditableCustomer={updateNewCustomerData}
+          handleCustomerDelete={() => {}}
+          handleCancelEdit={handleCancelAddCustomer}
+          handleSaveClick={handleSaveNewCustomer}
+          handleEditClick={() => {}}
+        />
+      </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <CustomerInformationModal

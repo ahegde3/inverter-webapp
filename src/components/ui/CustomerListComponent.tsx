@@ -71,6 +71,7 @@ export default function CustomerListComponent({
         phoneNo: "",
         dateOfBirth: "",
         state: "",
+        city: "",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -132,9 +133,9 @@ export default function CustomerListComponent({
 
   const getDeviceData = async () => {
     if (!selectedCustomerDetail) return;
-    console.log("Selected Customer Detail", isCustomerAddition);
+
     if (isCustomerAddition) {
-      console.log("Customer is null");
+
       setDeviceData(null);
       return;
     }

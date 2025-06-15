@@ -43,75 +43,8 @@ export async function POST(
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
-    const {
-      customerId,
-      deviceId,
-      message,
-      assignedTo,
-      notes,
-    } = validationResult.data;
-
-    // // Verify that the customer exists
-    // console.log("Verifying customer with customerId:", customerId);
-    // const customerScanCommand = new ScanCommand({
-    //   TableName: "Inverter-db",
-    //   FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
-    //   ExpressionAttributeValues: {
-    //     ":pk": `USER#${emailId}`,
-    //     ":sk": "PROFILE",
-    //   },
-    // });
-
-    // const customerScanResult = await ddb.send(customerScanCommand);
-    // const customerExists = customerScanResult.Items?.some(
-    //   (item) => item.userId === customerId
-    // );
-
-    // if (!customerExists) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Customer with ID ${customerId} not found.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 404 });
-    // }
-
-    // // Verify that the device exists and belongs to the customer
-    // console.log("Verifying device with deviceId:", deviceId);
-    // const deviceScanCommand = new ScanCommand({
-    //   TableName: "Inverter-db",
-    //   FilterExpression:
-    //     "begins_with(PK, :pk) AND SK = :sk AND deviceId = :deviceId",
-    //   ExpressionAttributeValues: {
-    //     ":pk": "DEVICE#",
-    //     ":sk": "PROFILE",
-    //     ":deviceId": deviceId,
-    //   },
-    // });
-
-    // const deviceScanResult = await ddb.send(deviceScanCommand);
-
-    // if (!deviceScanResult.Items || deviceScanResult.Items.length === 0) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Device with ID ${deviceId} not found.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 404 });
-    // }
-
-    // const device = deviceScanResult.Items[0];
-    // if (device.customerId !== customerId) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Device ${deviceId} does not belong to customer ${customerId}.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 403 });
-    // }
+    const { customerId, deviceId, message, assignedTo, notes } =
+      validationResult.data;
 
     // Generate unique ticket ID and timestamp
     const ticketId = generateTicketId();
@@ -132,8 +65,6 @@ export async function POST(
       updatedAt: currentTimestamp,
     };
 
-    console.log("Creating ticket record:", ticketRecord);
-
     const putCommand = new PutCommand({
       TableName: "Inverter-db",
       Item: ticketRecord,
@@ -141,8 +72,6 @@ export async function POST(
     });
 
     await ddb.send(putCommand);
-
-    console.log("Ticket created successfully with ID:", ticketId);
 
     const successResponse = {
       success: true,
@@ -171,8 +100,6 @@ export async function POST(
 // GET method to fetch all tickets
 export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
   try {
-    console.log("Fetching all tickets from database...");
-
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
       FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
@@ -184,8 +111,6 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
 
     const result = await ddb.send(scanCommand);
     const tickets = (result.Items || []) as DynamoDBTicket[];
-
-    console.log(`Found ${tickets.length} tickets in database`);
 
     // Transform the data to match the frontend Ticket interface
     const transformedTickets = tickets.map((item: DynamoDBTicket) => {
@@ -281,7 +206,8 @@ export async function PUT(
         success: false,
         error: "Ticket ID is required",
       };
-      const validatedErrorResponse = ticketUpdateResponseSchema.parse(errorResponse);
+      const validatedErrorResponse =
+        ticketUpdateResponseSchema.parse(errorResponse);
       return NextResponse.json(validatedErrorResponse, { status: 400 });
     }
 
@@ -308,15 +234,6 @@ export async function PUT(
 
       const { customerId, deviceId, message, status, assignedTo, notes } =
         validationResult.data;
-
-      console.log(`Updating complete ticket details for ${ticketId}`, {
-        customerId,
-        deviceId,
-        message,
-        status,
-        assignedTo,
-        notes,
-      });
 
       // Update the ticket in DynamoDB
       const updateCommand = new UpdateCommand({
@@ -356,8 +273,6 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 500 });
       }
 
-      console.log(`Successfully updated ticket ${ticketId}`);
-
       const successResponse = {
         success: true,
         message: "Ticket updated successfully",
@@ -368,7 +283,9 @@ export async function PUT(
           message: result.Attributes.message,
           status: result.Attributes.status,
           assignedTo: result.Attributes.assignedTo,
-          notes: result.Attributes.note ? [{ content: result.Attributes.note }] : [],
+          notes: result.Attributes.note
+            ? [{ content: result.Attributes.note }]
+            : [],
           updatedAt: result.Attributes.updatedAt,
         },
       };
@@ -395,8 +312,6 @@ export async function PUT(
       }
 
       const { status } = validationResult.data;
-
-      console.log(`Updating ticket ${ticketId} status to ${status}`);
 
       // Update the ticket status in DynamoDB
       const updateCommand = new UpdateCommand({
@@ -429,10 +344,6 @@ export async function PUT(
           ticketUpdateResponseSchema.parse(errorResponse);
         return NextResponse.json(validatedErrorResponse, { status: 500 });
       }
-
-      console.log(
-        `Successfully updated ticket ${ticketId} to status ${status}`
-      );
 
       const successResponse = {
         success: true,

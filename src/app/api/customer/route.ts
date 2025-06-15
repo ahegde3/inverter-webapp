@@ -110,7 +110,7 @@ export async function DELETE(
     }
 
     const response = await deleteUserById(customerId);
-    console.log("response", response);
+
 
     // Validate response with Zod schema
     const validatedResponse = customerDeleteResponseSchema.parse(response);

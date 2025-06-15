@@ -16,7 +16,7 @@ export const UserRegistrationSchema = z.object({
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
   state: z.string().optional(),
-
+  city: z.string().optional(),
   role: z
     .enum([
       UserRole.CUSTOMER,

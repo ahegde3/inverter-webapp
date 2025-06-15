@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUsersByRole } from "@/lib/services/user.service";
-import { userSchema } from "@/lib/schema";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,4 +32,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}
