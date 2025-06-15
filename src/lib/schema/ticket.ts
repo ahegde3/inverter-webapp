@@ -4,7 +4,7 @@ export const ticketCreateSchema = z.object({
   customerId: z.string().min(1, "Customer ID is required"),
   deviceId: z.string().min(1, "Device ID is required"),
   emailId: z.string(),
-  assignedTo: z.string().min(1, "Assigned To is required"),
+  assignedTo: z.string().optional(),
   notes: z.array(z.object({
     content: z.string(),
     createdAt: z.string().optional(),
@@ -28,7 +28,7 @@ export const ticketSchema = z.object({
   customerId: z.string(),
   deviceId: z.string(),
   message: z.string(),
-  assignedTo: z.string(),
+  assignedTo: z.string().optional(),
   notes: z.array(z.object({
     content: z.string(),
     createdAt: z.string().optional(),
@@ -77,7 +77,7 @@ export const ticketFullUpdateSchema = z.object({
     .min(1, "Message is required")
     .max(1000, "Message is too long"),
   status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
-  assignedTo: z.string().min(1, "Assigned To is required"),
+  assignedTo: z.string().optional(),
   notes: z.array(z.object({
     content: z.string(),
     createdAt: z.string().optional(),
@@ -95,7 +95,7 @@ export const ticketFullUpdateResponseSchema = z.object({
       deviceId: z.string(),
       message: z.string(),
       status: z.enum(["OPEN", "IN_PROGRESS", "COMPLETED"]),
-      assignedTo: z.string(),
+      assignedTo: z.string().optional(),
       notes: z.array(z.object({
         content: z.string(),
         createdAt: z.string().optional(),
