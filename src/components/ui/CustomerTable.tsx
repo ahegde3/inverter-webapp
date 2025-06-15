@@ -25,6 +25,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserRegistrationSchema } from "@/types/auth";
+import type { CustomerErrorResponse } from "@/types/customer";
 
 export default function CustomerTable() {
   const [customers, setCustomers] = useState<CustomerData[]>([]);
@@ -41,6 +43,67 @@ export default function CustomerTable() {
     null
   );
   const [deviceData, setDeviceData] = useState<Device[] | null>(null);
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+  const [newCustomerData, setNewCustomerData] = useState<CustomerData>({
+    userId: "",
+    firstName: "",
+    lastName: "",
+    emailId: "",
+    phoneNo: "",
+    dateOfBirth: "",
+    address: "",
+    city: "",
+    state: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  const addNewCustomer = async (body: object) => {
+    const validationResult = UserRegistrationSchema.safeParse(body);
+
+    if (!validationResult.success) {
+      throw new Error(
+        validationResult.error.errors
+          .map((err) => `${err.path.join(".")}: ${err.message}`)
+          .join(", ")
+      );
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(validationResult.data),
+      });
+
+      const data: CustomerApiResponse = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          "success" in data && !data.success
+            ? (data as CustomerErrorResponse).error
+            : "Failed to update customer"
+        );
+      }
+
+      if ("success" in data && data.success) {
+        // Refetch customers to update the list
+        await fetchCustomers();
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Fetch customers from API
   const fetchCustomers = async () => {
@@ -239,6 +302,46 @@ export default function CustomerTable() {
     setStateFilter(undefined);
   };
 
+  const handleAddCustomerClick = () => {
+    setIsAddingCustomer(true);
+    setNewCustomerData({
+      userId: "",
+      firstName: "",
+      lastName: "",
+      emailId: "",
+      phoneNo: "",
+      dateOfBirth: "",
+      address: "",
+      city: "",
+      state: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const handleCancelAddCustomer = () => {
+    setIsAddingCustomer(false);
+  };
+
+  const handleSaveNewCustomer = async () => {
+    try {
+      await addNewCustomer(newCustomerData);
+      setIsAddingCustomer(false);
+    } catch (error) {
+      console.error("Error adding customer:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to add customer"
+      );
+    }
+  };
+
+  const updateNewCustomerData = (field: keyof CustomerData, value: string) => {
+    setNewCustomerData({
+      ...newCustomerData,
+      [field]: value,
+    });
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
@@ -275,6 +378,13 @@ export default function CustomerTable() {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            onClick={handleAddCustomerClick}
+            className="flex items-center gap-2"
+          >
+            <User className="h-4 w-4" />
+            Add Customer
+          </Button>
           <Button
             variant="outline"
             onClick={fetchCustomers}
@@ -548,6 +658,21 @@ export default function CustomerTable() {
           </div>
         </div>
       )}
+
+      {/* Add Customer Modal */}
+      <Dialog open={isAddingCustomer} onOpenChange={setIsAddingCustomer}>
+        <CustomerInformationModal
+          selectedCustomer={newCustomerData}
+          editableCustomer={newCustomerData}
+          deviceData={null}
+          isEditable={true}
+          updateEditableCustomer={updateNewCustomerData}
+          handleCustomerDelete={() => {}}
+          handleCancelEdit={handleCancelAddCustomer}
+          handleSaveClick={handleSaveNewCustomer}
+          handleEditClick={() => {}}
+        />
+      </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <CustomerInformationModal

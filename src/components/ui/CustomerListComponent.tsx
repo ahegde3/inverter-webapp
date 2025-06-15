@@ -133,9 +133,9 @@ export default function CustomerListComponent({
 
   const getDeviceData = async () => {
     if (!selectedCustomerDetail) return;
-    console.log("Selected Customer Detail", isCustomerAddition);
+
     if (isCustomerAddition) {
-      console.log("Customer is null");
+
       setDeviceData(null);
       return;
     }

@@ -48,7 +48,7 @@ export async function POST(
     } = validationResult.data;
 
     // Check if device with this serial number already exists
-    console.log("Checking for existing device with serialNo:", serialNo);
+
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
       FilterExpression:
@@ -61,7 +61,7 @@ export async function POST(
     });
 
     const scanResult = await ddb.send(scanCommand);
-    console.log("Scan result:", scanResult);
+
 
     if (scanResult.Items && scanResult.Items.length > 0) {
       const errorResponse = {
@@ -94,7 +94,6 @@ export async function POST(
       updatedAt: currentTimestamp,
     };
 
-    console.log("Creating device record:", deviceRecord);
 
     const putCommand = new PutCommand({
       TableName: "Inverter-db",
@@ -104,7 +103,6 @@ export async function POST(
 
     await ddb.send(putCommand);
 
-    console.log("Device registered successfully with ID:", deviceId);
 
     const successResponse = {
       success: true as const,

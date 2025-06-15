@@ -71,7 +71,7 @@ export async function POST(
       updatedAt: currentTimestamp,
     };
 
-    console.log("Creating ticket record:", ticketRecord);
+
 
     const putCommand = new PutCommand({
       TableName: "Inverter-db",
@@ -81,7 +81,6 @@ export async function POST(
 
     await ddb.send(putCommand);
 
-    console.log("Ticket created successfully with ID:", ticketId);
 
     const successResponse = {
       success: true,
@@ -110,7 +109,7 @@ export async function POST(
 // GET method to fetch all tickets
 export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
   try {
-    console.log("Fetching all tickets from database...");
+
 
     const scanCommand = new ScanCommand({
       TableName: "Inverter-db",
@@ -124,7 +123,7 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
     const result = await ddb.send(scanCommand);
     const tickets = (result.Items || []) as DynamoDBTicket[];
 
-    console.log(`Found ${tickets.length} tickets in database`);
+
 
     // Transform the data to match the frontend Ticket interface
     const transformedTickets = tickets.map((item: DynamoDBTicket) => {
@@ -158,7 +157,7 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
           );
           normalizedStatus = "OPEN";
       }
-      console.log("item", item);
+
       return {
         ticketId: item.ticketId,
         customerId: item.customerId,
@@ -174,13 +173,13 @@ export async function GET(): Promise<NextResponse<TicketsGetResponse>> {
       };
     });
 
-    console.log(
-      `Transformed ${transformedTickets.length} tickets with status distribution:`,
-      transformedTickets.reduce((acc: Record<string, number>, ticket) => {
-        acc[ticket.status] = (acc[ticket.status] || 0) + 1;
-        return acc;
-      }, {})
-    );
+    // console.log(
+    //   `Transformed ${transformedTickets.length} tickets with status distribution:`,
+    //   transformedTickets.reduce((acc: Record<string, number>, ticket) => {
+    //     acc[ticket.status] = (acc[ticket.status] || 0) + 1;
+    //     return acc;
+    //   }, {})
+    // );
 
     const successResponse = {
       success: true,
@@ -232,7 +231,6 @@ export async function PUT(
       const { ticketId, customerId, deviceId, message, status } =
         validationResult.data;
 
-      console.log(`Updating complete ticket details for ${ticketId}`);
 
       // Update the ticket in DynamoDB
       const updateCommand = new UpdateCommand({
@@ -270,7 +268,6 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 500 });
       }
 
-      console.log(`Successfully updated ticket ${ticketId}`);
 
       const successResponse = {
         success: true,
@@ -305,7 +302,7 @@ export async function PUT(
 
       const { ticketId, status } = validationResult.data;
 
-      console.log(`Updating ticket ${ticketId} status to ${status}`);
+
 
       // Update the ticket status in DynamoDB
       const updateCommand = new UpdateCommand({
@@ -339,9 +336,7 @@ export async function PUT(
         return NextResponse.json(validatedErrorResponse, { status: 500 });
       }
 
-      console.log(
-        `Successfully updated ticket ${ticketId} to status ${status}`
-      );
+
 
       const successResponse = {
         success: true,

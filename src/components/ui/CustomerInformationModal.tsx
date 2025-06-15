@@ -139,12 +139,15 @@ export default function CustomerInformationModal({
             </label>
             <input
               id="phoneNo"
-              type="phoneNo"
+              type="tel"
+              inputMode="numeric"
               value={editableCustomer.phoneNo}
               readOnly={!isEditable}
-              onChange={(e) =>
-                updateEditableCustomer("phoneNo", e.target.value)
-              }
+              onChange={(e) => {
+                // Only allow numeric input
+                const numericValue = e.target.value.replace(/\D/g, "");
+                updateEditableCustomer("phoneNo", numericValue);
+              }}
               className={`col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm ${
                 isEditable
                   ? "bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"

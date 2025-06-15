@@ -37,11 +37,12 @@ export async function createUser(userData: UserRegistrationInput) {
       password: userData.password,
       dateOfBirth: userData.dateOfBirth,
       state: userData.state,
+      city: userData.city,
       role: userData.role,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
-    // console.log("user", user);
+
     await ddb.send(
       new PutCommand({
         TableName: TABLE_NAME,
@@ -85,7 +86,7 @@ export async function findUserByEmail(emailId: string): Promise<User | null> {
   };
 
   const result = await ddb.send(new ScanCommand(params));
-  console.log(result);
+
   if (!result.Items || result.Items.length === 0) return null;
 
   // Validate the DynamoDB response against our schema
@@ -114,7 +115,7 @@ export const getUsersByRole = async (roleName: string): Promise<User[]> => {
       },
     };
     const data = await ddb.send(new ScanCommand(params));
-    console.log(data);
+
 
     if (!data.Items) return [];
 
