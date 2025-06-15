@@ -51,67 +51,6 @@ export async function POST(
       note = "",
     } = validationResult.data;
 
-    // // Verify that the customer exists
-    // console.log("Verifying customer with customerId:", customerId);
-    // const customerScanCommand = new ScanCommand({
-    //   TableName: "Inverter-db",
-    //   FilterExpression: "begins_with(PK, :pk) AND SK = :sk",
-    //   ExpressionAttributeValues: {
-    //     ":pk": `USER#${emailId}`,
-    //     ":sk": "PROFILE",
-    //   },
-    // });
-
-    // const customerScanResult = await ddb.send(customerScanCommand);
-    // const customerExists = customerScanResult.Items?.some(
-    //   (item) => item.userId === customerId
-    // );
-
-    // if (!customerExists) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Customer with ID ${customerId} not found.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 404 });
-    // }
-
-    // // Verify that the device exists and belongs to the customer
-    // console.log("Verifying device with deviceId:", deviceId);
-    // const deviceScanCommand = new ScanCommand({
-    //   TableName: "Inverter-db",
-    //   FilterExpression:
-    //     "begins_with(PK, :pk) AND SK = :sk AND deviceId = :deviceId",
-    //   ExpressionAttributeValues: {
-    //     ":pk": "DEVICE#",
-    //     ":sk": "PROFILE",
-    //     ":deviceId": deviceId,
-    //   },
-    // });
-
-    // const deviceScanResult = await ddb.send(deviceScanCommand);
-
-    // if (!deviceScanResult.Items || deviceScanResult.Items.length === 0) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Device with ID ${deviceId} not found.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 404 });
-    // }
-
-    // const device = deviceScanResult.Items[0];
-    // if (device.customerId !== customerId) {
-    //   const errorResponse = {
-    //     success: false,
-    //     error: `Device ${deviceId} does not belong to customer ${customerId}.`,
-    //   };
-
-    //   const validatedErrorResponse = ticketResponseSchema.parse(errorResponse);
-    //   return NextResponse.json(validatedErrorResponse, { status: 403 });
-    // }
 
     // Generate unique ticket ID and timestamp
     const ticketId = generateTicketId();

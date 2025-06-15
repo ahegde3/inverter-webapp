@@ -9,6 +9,7 @@ export const userSchema = z.object({
   lastName: z.string().min(1),
   role: z.string(),
   address: z.string().optional(),
+  city: z.string().optional(),
   state: z.string().optional(),
   phoneNo: z.string().optional(),
   dateOfBirth: z.string().optional(),
@@ -28,6 +29,7 @@ export const customerProfileSchema = z.object({
   //   phoneNumber: z.string().optional(),
   //   companyName: z.string().min(1),
   address: z.string(),
+
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -125,6 +127,7 @@ export const customerUpdateSchema = z.object({
   emailId: z.string().email().optional(),
   phoneNo: z.string().optional(),
   address: z.string().min(1).optional(),
+  city: z.string().optional(),
   state: z.string().optional(),
   dateOfBirth: z.string().optional(),
 });
