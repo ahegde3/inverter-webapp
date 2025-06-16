@@ -51,7 +51,7 @@ export default function CustomerInformationModal({
   handleEditClick,
 }: CustomerInformationModalProps) {
   return (
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-[425px] max-h-[80vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>Customer Details</DialogTitle>
         <DialogDescription>View customer information</DialogDescription>
