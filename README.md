@@ -1,36 +1,167 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
 
-First, run the development server:
+## Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Frontend and Backend: NextJS(Typescript)
+Database: DynamoDB (AWS)
+Hosting of website: Vercel
+
+
+## Env file
+
+```
+#used for Dynamo Db setup
+AWS_REGION=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+
+
+#Used for password encryption
+SECRET_KEY=  
+
+#Used for Reset password link
+EMAIL_FROM= 'vkpengineering07@gmail.com'
+EMAIL_APP_PASSWORD = 'waei bxzn gnyk ophn'
+
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Running the project on local
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Install all dependencies
 
-## Learn More
+```
+npm i
+```
 
-To learn more about Next.js, take a look at the following resources:
+Running the project on local
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## DynamoDB table structures
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+User
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+{
+  "PK": {
+    "S": "USER#79003601-06af-4c3e-b40d-0cde0b778f9d"
+  },
+  "SK": {
+    "S": "PROFILE"
+  },
+  "city": {
+    "S": "Mumbai"
+  },
+  "createdAt": {
+    "S": "1749441341"
+  },
+  "emailId": {
+    "S": "director@hjtindia.com"
+  },
+  "firstName": {
+    "S": "Hardik"
+  },
+  "lastName": {
+    "S": "Gohil"
+  },
+  "password": {
+    "S": "FQYWPQcYAg=="
+  },
+  "role": {
+    "S": "SUPER_ADMIN"
+  },
+  "state": {
+    "S": "maharashtra"
+  },
+  "updatedAt": {
+    "S": "1749441341"
+  },
+  "userId": {
+    "S": "79003601-06af-4c3e-b40d-0cde0b778f9d"
+  }
+}
+```
+Ticket
+
+```
+{
+  "PK": {
+    "S": "TICKET#TKTMBIIRF6JY5UYXF"
+  },
+  "SK": {
+    "S": "DETAILS"
+  },
+  "assignedTo": {
+    "S": "123454"
+  },
+  "createdAt": {
+    "S": "2025-06-04T22:28:39.451Z"
+  },
+  "customerId": {
+    "S": "sds"
+  },
+  "deviceId": {
+    "S": "sdfws"
+  },
+  "message": {
+    "S": "hello thi"
+  },
+  "note": {
+    "S": "You have to get the information"
+  },
+  "status": {
+    "S": "COMPLETED"
+  },
+  "ticketId": {
+    "S": "TKTMBIIRF6JY5UYXF"
+  },
+  "updatedAt": {
+    "S": "2025-06-08T20:37:07.665Z"
+  }
+}
+
+```
+
+Device
+
+```
+{
+  "PK": {
+    "S": "DEVICE#AMBE3IQ1MMW88C9"
+  },
+  "SK": {
+    "S": "METADATA"
+  },
+  "createdAt": {
+    "S": "1748808654"
+  },
+  "customerId": {
+    "S": "6931a14b-52c9-4e67-8ea2-61011617ef7b"
+  },
+  "deviceId": {
+    "S": "AMBE3IQ1MMW88C9"
+  },
+  "deviceType": {
+    "S": "Solar Panel"
+  },
+  "manufacturingDate": {
+    "S": "20 Aug 2024"
+  },
+  "serialNo": {
+    "S": "B475673"
+  },
+  "updatedAt": {
+    "S": "1748808654"
+  },
+  "warrantyEndDate": {
+    "S": "20 Aug 2025"
+  },
+  "warrantyStartDate": {
+    "S": "21 Aug 2025"
+  }
+}
+```
